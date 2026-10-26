@@ -72,10 +72,14 @@ button{font-family:inherit;color:inherit}
   animation:pop 1.2s ease-out forwards;pointer-events:none}
 @keyframes pop{0%{opacity:0;transform:translateY(6px) scale(.8)}20%{opacity:1}100%{opacity:0;transform:translateY(-34px) scale(1.15)}}
 @keyframes bump{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
-#plOpp{left:10px;top:6px}
-#plMe{left:10px}
+.pot{position:absolute;right:0;z-index:20;width:0;height:0}
+.pot .pc{position:absolute;right:calc(var(--cw)*-.2);top:0;width:calc(var(--cw)*.52);height:calc(var(--ch)*.52);border-radius:7px;overflow:hidden;box-shadow:0 3px 8px rgba(0,0,0,.45);transform:rotate(-3deg)}
+.pot .pc svg{width:100%;height:100%;display:block}
+.pot .bd{position:absolute;right:calc(var(--cw)*.32 - 10px);top:calc(var(--ch)*.26 - 22px);width:44px;height:44px;border-radius:50%;background:#14603f;border:3px solid #0a3a26;color:#fff;
+  font:800 calc(21px*var(--ts)) var(--sans);display:grid;place-items:center;box-shadow:0 3px 8px rgba(0,0,0,.45);font-variant-numeric:tabular-nums}
+.pot .bd.bump{animation:bump .5s}
 
-#deckPile .back{background:#efe2bf}
+#deckPile .back{background:#9aa0a6}
 #badge{position:absolute;z-index:26;min-width:42px;height:42px;padding:0 8px;border-radius:14px;display:grid;place-items:center;
   background:linear-gradient(#58c7ff,#1b78d0);border:3px solid #0b3560;color:#fff;font:800 22px var(--serif);
   text-shadow:0 2px 0 #0b3560;transform:translate(-50%,-50%);box-shadow:0 3px 8px rgba(0,0,0,.4)}
@@ -83,8 +87,8 @@ button{font-family:inherit;color:inherit}
   color:#fdf3d2;font:600 calc(13px*var(--ts)) var(--sans);white-space:nowrap}
 #trumpChip b{font-size:16px;margin-right:4px}
 #status:empty{display:none}
-#status{position:absolute;left:50%;transform:translateX(-50%);z-index:22;padding:7px 16px;border-radius:999px;background:rgba(6,28,18,.66);
-  color:#f8efd0;font:600 calc(14px*var(--ts)) var(--sans);white-space:nowrap;max-width:94%;overflow:hidden;text-overflow:ellipsis}
+#status{position:absolute;left:50%;transform:translateX(-50%);z-index:22;padding:7px 24px;border-radius:9px;background:#0b1f14;color:#fff;
+  font:800 calc(19px*var(--ts)) var(--sans);letter-spacing:.02em;white-space:nowrap;box-shadow:0 0 0 2px #1ee3c4 inset,0 0 14px rgba(30,227,196,.6)}
 
 .ov{position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:18px;background:rgba(4,18,11,.74);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
 .box{width:100%;max-width:370px;border-radius:20px;background:var(--panel);color:var(--panel-ink);padding:24px 22px;text-align:center;
@@ -113,12 +117,13 @@ button{font-family:inherit;color:inherit}
 #start .seg{background:rgba(0,0,0,.26)}
 #start .btn.ghost{color:#fdf3d2;border-color:rgba(253,243,210,.4)}
 
-#menu{position:absolute;z-index:45;right:8px;top:calc(50px + env(safe-area-inset-top));min-width:210px;border-radius:14px;overflow:hidden;
+#menu{position:absolute;z-index:58;right:8px;top:calc(50px + env(safe-area-inset-top));min-width:210px;border-radius:14px;overflow:hidden;
   background:var(--panel);color:var(--panel-ink);box-shadow:0 0 0 1.5px var(--gold) inset,0 14px 30px rgba(0,0,0,.4)}
 #menu button{display:block;width:100%;text-align:left;border:0;background:transparent;padding:14px 18px;font:600 calc(16px*var(--ts)) var(--sans);cursor:pointer;border-bottom:1px solid var(--line)}
 #menu button:last-child{border-bottom:0}
 #menu button:active{background:var(--panel-soft)}
-#menuBg{position:fixed;inset:0;z-index:44}
+#menuBg{position:fixed;inset:0;z-index:57}
+#btnMenu2{position:absolute;top:calc(8px + env(safe-area-inset-top));right:10px}
 
 #sheet{position:fixed;inset:0;z-index:70;background:var(--panel);color:var(--panel-ink);display:flex;flex-direction:column}
 #sheet .bar{flex:none;display:flex;align-items:center;gap:8px;height:54px;padding:0 10px;padding-top:env(safe-area-inset-top);box-sizing:content-box;border-bottom:1px solid var(--line)}
@@ -201,6 +206,13 @@ table.st td:first-child,table.st th:first-child{text-align:left}
     <symbol id="s1" viewBox="0 0 100 100"><path d="M50 3 89 50 50 97 11 50z"/></symbol>
     <symbol id="s2" viewBox="0 0 100 100"><circle cx="50" cy="28" r="21"/><circle cx="27" cy="60" r="21"/><circle cx="73" cy="60" r="21"/><circle cx="50" cy="55" r="12"/><path d="M50 50 40 96h20z"/></symbol>
     <symbol id="s3" viewBox="0 0 100 100"><path d="M50 4C50 4 94 34 94 60c0 16-12 25-25 25-8 0-14-4-17-10 1 11 5 18 13 21H35c8-3 12-10 13-21-3 6-9 10-17 10-13 0-25-9-25-25C6 34 50 4 50 4z"/></symbol>
+    <pattern id="knurl" width="2.4" height="2.4" patternUnits="userSpaceOnUse"><rect width="2.4" height="2.4" fill="#8c9298"/><circle cx="1.2" cy="1.2" r=".55" fill="#c9cdd1"/></pattern>
+    <pattern id="engr" width="4" height="1.7" patternUnits="userSpaceOnUse"><rect width="4" height="1.7" fill="#b9bdc2"/><rect width="4" height=".5" fill="#7e848a"/></pattern>
+    <linearGradient id="tw" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#f3f4f5"/><stop offset=".55" stop-color="#c9cdd1"/><stop offset="1" stop-color="#7d838a"/></linearGradient>
+    <linearGradient id="bw" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#eceef0"/><stop offset="1" stop-color="#9da2a8"/></linearGradient>
+    <linearGradient id="bkg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#cfd3d7"/><stop offset="1" stop-color="#868c93"/></linearGradient>
+    <pattern id="hatch" width="3" height="3" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><rect width="3" height="3" fill="#a9aeb4"/><path d="M0 .8H3" stroke="#7f858c" stroke-width=".7"/></pattern>
+    <pattern id="hatch2" width="2.4" height="2.4" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><rect width="2.4" height="2.4" fill="#767c83"/><path d="M0 .6H2.4" stroke="#5a6067" stroke-width=".6"/></pattern>
     <radialGradient id="paper" cx=".5" cy=".45" r=".8"><stop offset="0" stop-color="#f8f7f1"/><stop offset=".65" stop-color="#efeee5"/><stop offset="1" stop-color="#e3e1d4"/></radialGradient>
     <radialGradient id="wh" cx=".5" cy=".45" r=".8"><stop offset="0" stop-color="#fff"/><stop offset=".6" stop-color="#fbfbf9"/><stop offset="1" stop-color="#ecece8"/></radialGradient>
     <clipPath id="hf"><path d="M9 7H91V58L9 92Z"/></clipPath>
@@ -218,8 +230,8 @@ table.st td:first-child,table.st th:first-child{text-align:left}
   </header>
   <main id="board">
     <div id="wm"><div class="c">♛</div><div class="t">BRISCOLA</div><div class="b">BY MIKI</div></div>
-    <div class="plaque" id="plOpp"><div class="who"><span>Avversario</span><small id="oppSub"></small></div><div class="pt" id="oppPt">0</div></div>
-    <div class="plaque" id="plMe"><div class="who"><span>Tu</span><small id="meSub"></small></div><div class="pt" id="mePt">0</div></div>
+    <div class="pot" id="potOpp"><div class="pc"></div><div class="bd" id="oppPt">0</div></div>
+    <div class="pot" id="potMe"><div class="pc"></div><div class="bd" id="mePt">0</div></div>
     <div class="card pile" id="deckPile"><div class="in"><div class="face"></div><div class="back"></div></div></div>
     <div id="badge">0</div>
     <div id="trumpChip"></div>
@@ -237,6 +249,7 @@ table.st td:first-child,table.st th:first-child{text-align:left}
 </div>
 
 <div id="start">
+  <button class="ib" id="btnMenu2" aria-label="Menu"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button>
   <div class="wrap">
     <div class="fan" id="fan"></div>
     <h1>Briscola</h1>
@@ -471,21 +484,38 @@ function faceSVG(id){
   }
   return FACE_CACHE[id]=o+`</svg>`;
 }
+const BACK_HALF=`<g stroke="#23272c" stroke-width=".55" stroke-linejoin="round">
+<path d="M13 58V39h15v19z" fill="url(#bw)"/><path d="M13 39h15M13 44h15" stroke-width=".4"/>
+<path d="M60 58V35h25v23z" fill="url(#bw)"/><path d="M60 35h25" stroke-width=".4"/>
+<path d="M85 58V41h4v17z" fill="#8f949a"/>
+<path d="M44 58V17h14v41z" fill="url(#tw)"/>
+<path d="M43 17h16v3H43z" fill="#d9dce0"/><path d="M43 17v-3h3v3M47.5 17v-3h3v3M52 17v-3h3v3M56 17v-3h3v3" fill="#d9dce0"/>
+<path d="M29 58V26h14v32z" fill="url(#tw)"/>
+<path d="M28 26h16v3H28z" fill="#d9dce0"/><path d="M28 26v-3h3v3M32.5 26v-3h3v3M37 26v-3h3v3M41 26v-3h3v3" fill="#d9dce0"/>
+</g>
+<g fill="#2b3036">
+<rect x="49" y="25" width="3.4" height="7" rx="1.7"/><rect x="49" y="37" width="3.4" height="7" rx="1.7"/>
+<rect x="34" y="33" width="3.2" height="6.5" rx="1.6"/><rect x="34" y="44" width="3.2" height="6.5" rx="1.6"/>
+<rect x="16" y="43" width="2.6" height="3.4"/><rect x="21.5" y="43" width="2.6" height="3.4"/><rect x="16" y="50" width="2.6" height="3.4"/><rect x="21.5" y="50" width="2.6" height="3.4"/>
+<rect x="63" y="40" width="2.6" height="3.4"/><rect x="68.5" y="40" width="2.6" height="3.4"/><rect x="74" y="40" width="2.6" height="3.4"/><rect x="79.5" y="40" width="2.6" height="3.4"/>
+<rect x="63" y="48" width="2.6" height="3.4"/><rect x="68.5" y="48" width="2.6" height="3.4"/><rect x="74" y="48" width="2.6" height="3.4"/><rect x="79.5" y="48" width="2.6" height="3.4"/>
+</g>
+<g stroke="#23272c" stroke-width=".55">
+<path d="M13 58h74v7H13z" fill="#cfd2d6"/>
+<path d="M13 65h74v7H13z" fill="#b9bdc2"/>
+</g>
+<g fill="#2b3036">
+<path d="M15.5 65.2V62a2.3 2.3 0 0 1 4.6 0v3.2z"/><path d="M24.5 65.2V62a2.3 2.3 0 0 1 4.6 0v3.2z"/><path d="M33.5 65.2V62a2.3 2.3 0 0 1 4.6 0v3.2z"/><path d="M42.5 65.2V62a2.3 2.3 0 0 1 4.6 0v3.2z"/><path d="M53.5 65.2V62a2.3 2.3 0 0 1 4.6 0v3.2z"/><path d="M62.5 65.2V62a2.3 2.3 0 0 1 4.6 0v3.2z"/><path d="M71.5 65.2V62a2.3 2.3 0 0 1 4.6 0v3.2z"/><path d="M80.5 65.2V62a2.3 2.3 0 0 1 4.6 0v3.2z"/>
+</g>
+<path d="M15 68.6H85" stroke="#2b3036" stroke-width="1.6" stroke-dasharray="1.2 .9" fill="none"/>`;
 const BACK_SVG=`<svg viewBox="0 0 100 150" xmlns="http://www.w3.org/2000/svg">
-<rect x="1" y="1" width="98" height="148" rx="9" fill="url(#parch)" stroke="#b39a6c" stroke-width="1.3"/>
-<rect x="7" y="7" width="86" height="136" rx="3" fill="#1f3a7a" stroke="${GOLD}" stroke-width="1.6"/>
-<rect x="11" y="11" width="78" height="128" fill="url(#lat2)" stroke="${GOLD}" stroke-width="1.2"/>
-<rect x="15" y="15" width="70" height="120" fill="none" stroke="${GOLD}" stroke-width=".8" stroke-dasharray="2 2"/>
-<g fill="#1f3a7a" stroke="${GOLD}" stroke-width="1.3">
-<path d="M50 24 62 36 50 48 38 36Z"/><path d="M50 102 62 114 50 126 38 114Z"/>
-<circle cx="24" cy="30" r="7"/><circle cx="76" cy="30" r="7"/><circle cx="24" cy="120" r="7"/><circle cx="76" cy="120" r="7"/>
-<circle cx="50" cy="75" r="20"/></g>
-<g fill="${GOLD}"><circle cx="50" cy="36" r="2"/><circle cx="50" cy="114" r="2"/><circle cx="24" cy="30" r="2.4"/><circle cx="76" cy="30" r="2.4"/><circle cx="24" cy="120" r="2.4"/><circle cx="76" cy="120" r="2.4"/></g>
-<g fill="${GOLD}" stroke="#1f3a7a" stroke-width=".6">
-<ellipse cx="50" cy="60" rx="3" ry="6"/><ellipse cx="50" cy="90" rx="3" ry="6"/><ellipse cx="35" cy="75" rx="6" ry="3"/><ellipse cx="65" cy="75" rx="6" ry="3"/>
-<ellipse cx="39.4" cy="64.4" rx="3" ry="5.4" transform="rotate(-45 39.4 64.4)"/><ellipse cx="60.6" cy="64.4" rx="3" ry="5.4" transform="rotate(45 60.6 64.4)"/>
-<ellipse cx="39.4" cy="85.6" rx="3" ry="5.4" transform="rotate(45 39.4 85.6)"/><ellipse cx="60.6" cy="85.6" rx="3" ry="5.4" transform="rotate(-45 60.6 85.6)"/></g>
-<circle cx="50" cy="75" r="9" fill="${RED}" stroke="${GOLD}" stroke-width="1.6"/><circle cx="50" cy="75" r="3.2" fill="${GOLD}"/>
+<rect x="1" y="1" width="98" height="148" rx="9" fill="url(#knurl)" stroke="#3b4147" stroke-width="1.3"/>
+<rect x="6" y="6" width="88" height="138" rx="3.5" fill="#d6d9dc" stroke="#2f353b" stroke-width=".9"/>
+<rect x="8" y="8" width="84" height="134" rx="2.5" fill="url(#engr)" stroke="#2f353b" stroke-width=".7"/>
+<rect x="11" y="11" width="78" height="128" rx="1.5" fill="none" stroke="#f1f2f4" stroke-width=".9"/>
+${BACK_HALF}<g transform="rotate(180 50 75)">${BACK_HALF}</g>
+<circle cx="50" cy="75" r="8.4" fill="#cfd2d6" stroke="#23272c" stroke-width=".9"/><circle cx="50" cy="75" r="6" fill="none" stroke="#23272c" stroke-width=".7"/><circle cx="50" cy="75" r="3.1" fill="#2b3036"/><circle cx="50" cy="75" r="1.2" fill="#e8eaec"/>
+<circle cx="50" cy="75" r="7.2" fill="none" stroke="#23272c" stroke-width=".6" stroke-dasharray="1 1"/>
 </svg>`;
 /*CARDART_END*/
 
@@ -536,21 +566,23 @@ let G=null,L={},CARDS=new Map(),Z=100;
 class Abort extends Error{}
 const wait=ms=>{const g=G;return new Promise((res,rej)=>setTimeout(()=>{(g!==G||(g&&g.dead))?rej(new Abort()):res()},ms*SPD()))};
 let sayTimer=null;
-function say(t){$('status').textContent=t}
+function say(){}  /* nessun messaggio di stato: resta solo "Tocca a te" */
 
 function computeLayout(){
   const b=$('board'),W=b.clientWidth,H=b.clientHeight;
   const cw=Math.max(60,Math.min(W*.27,H*.15,130)),ch=cw*1.5,os=.6,dsc=.8;
   L={W,H,cw,ch,os,dsc};
-  L.handY=H-ch/2-14;
+  L.handY=H-ch/2-50;
   L.oppY=54+ch*os/2;
-  const topEnd=54+ch*os+6,botStart=H-ch-14-50;
+  const topEnd=54+ch*os+6,botStart=H-ch-60;
   L.midY=(topEnd+botStart)/2-4;
   L.dx=12+cw*dsc/2;L.dy=L.midY;
   L.tx=W*.64;L.ty=L.midY-8;
   b.style.setProperty('--cw',cw+'px');b.style.setProperty('--ch',ch+'px');
-  const me=$('plMe');me.style.top=(H-ch-14-48)+'px';
-  const st=$('status');st.style.top=Math.min(L.ty+ch*.58+12,botStart-8)+'px';
+  const po=L.oppY-ch*.1,pm=H-ch-50-ch*.52-8;
+  $('potOpp').style.top=po+'px';$('potMe').style.top=pm+'px';
+  L.potOppY=po+ch*.26;L.potMeY=pm+ch*.26;
+  $('status').style.top=(H-44)+'px';
   const chip=$('trumpChip');chip.style.left='8px';chip.style.top=(L.dy-ch*dsc/2-20)+'px';
   const bd=$('badge');bd.style.left=L.dx+'px';bd.style.top=L.dy+'px';
 }
@@ -606,7 +638,7 @@ function renderDeck(){
   el.classList.add('nt');
   el.style.display=n>1?'':'none';
   const layers=Math.min(4,Math.ceil(Math.max(0,n-1)/9)),sh=[];
-  for(let i=1;i<=layers;i++)sh.push(`${i*1.6}px ${i*1.6}px 0 ${i%2?'#b9a878':'#cdbd8f'}`);
+  for(let i=1;i<=layers;i++)sh.push(`${i*1.6}px ${i*1.6}px 0 ${i%2?'#6f767d':'#868d94'}`);
   sh.push('0 3px 8px rgba(0,0,0,.4)');
   el.querySelector('.back').style.boxShadow=sh.join(',');
   el.querySelector('.back').innerHTML=BACK_SVG;
@@ -620,24 +652,10 @@ function renderTrump(){
   c.innerHTML=`<b style="color:${G.T<2?'#ff8f86':'#f1f1f5'}">${SUIT_CH[G.T]}</b>Briscola: ${SUIT_NAMES[G.T]}`;
 }
 function renderScores(winner,pts){
-  $('oppPt').firstChild?($('oppPt').firstChild.nodeValue=G.pts[1]):($('oppPt').textContent=G.pts[1]);
-  $('mePt').firstChild?($('mePt').firstChild.nodeValue=G.pts[0]):($('mePt').textContent=G.pts[0]);
-  $('oppSub').textContent=LEVELS[G.level]+' · '+G.capt[1]+' carte';
-  $('meSub').textContent=G.capt[0]+' carte';
-  if(winner!==undefined){
-    const el=winner===0?$('mePt'):$('oppPt');
-    el.classList.remove('bump');void el.offsetWidth;
-    if(pts>0){
-      el.classList.add('bump');
-      const p=document.createElement('span');p.className='pop';p.textContent='+'+pts;el.appendChild(p);
-      setTimeout(()=>p.remove(),1300);
-    }
-  }
+  $('oppPt').textContent=G.pts[1];$('mePt').textContent=G.pts[0];
+  if(winner!==undefined&&pts>0){const el=winner===0?$('mePt'):$('oppPt');el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump')}
 }
-function setTurn(side){
-  $('plMe').classList.toggle('turn',side===0);
-  $('plOpp').classList.toggle('turn',side===1);
-}
+function setTurn(side){$('status').textContent=side===0?'Tocca a te':''}
 function boardReset(){
   CARDS.forEach(el=>el.remove());CARDS.clear();
   document.querySelectorAll('#board .card:not(.pile)').forEach(e=>e.remove());
@@ -726,7 +744,7 @@ async function playerPlay(){
   say('');
   G.phase='player';render();
   const id=await new Promise(res=>{G.pending=res});
-  G.phase='cpu';
+  G.phase='cpu';setTurn(-1);
   playCard(0,id);await wait(420);
 }
 function cpuChoose(){
@@ -756,7 +774,7 @@ async function resolveTrick(){
   const els=[CARDS.get(cL),CARDS.get(cF)];
   els.forEach((el,i)=>{
     el.classList.remove('up');
-    setT(el,{x:-L.cw*1.2,y:w===0?L.H-L.ch-14-24:30,r:(i?-14:12),s:.6});
+    setT(el,{x:L.W+L.cw*.35,y:w===0?L.potMeY:L.potOppY,r:(i?-14:12),s:.5});
     el.style.opacity='0';
   });
   await wait(560);
@@ -816,6 +834,7 @@ function applySound(){$('btnSound').innerHTML=S.sound?ICON_ON:ICON_OFF;if(AU.mas
 function openMenu(o){$('menu').classList.toggle('hidden',!o);$('menuBg').classList.toggle('hidden',!o)}
 $('btnMenu').onclick=()=>{auInit();openMenu($('menu').classList.contains('hidden'))};
 $('menuBg').onclick=()=>openMenu(false);
+$('btnMenu2').onclick=()=>{auInit();openMenu($('menu').classList.contains('hidden'))};
 $('btnSound').onclick=()=>{auInit();S.sound=!S.sound;saveS();applySound();if(S.sound)sfx.tap()};
 $('mTheme').onclick=()=>{S.themeMode=isDark()?'light':'dark';saveS();applyTheme();openMenu(false)};
 document.querySelectorAll('#menu [data-s]').forEach(b=>b.onclick=()=>{openMenu(false);openSheet(b.dataset.s)});
@@ -913,7 +932,7 @@ const SHEETS={
   info:{title:'Info e crediti',html:()=>{
     const tot=Object.values(STATS).reduce((n,x)=>n+x.w+x.l+x.d,0),won=Object.values(STATS).reduce((n,x)=>n+x.w,0);
     return `<div class="hero"><div class="mf">${[[9,0,-12],[39,48,0],[17,96,12]].map(c=>`<div style="left:${c[1]}px;transform:rotate(${c[2]}deg)">${faceSVG(c[0])}</div>`).join('')}</div>
-      <h2>Briscola by Miki</h2><p>La briscola contro il computer</p><span class="pill">Versione <span id="app-version">2.9</span></span></div>
+      <h2>Briscola by Miki</h2><p>La briscola contro il computer</p><span class="pill">Versione <span id="app-version">3.1</span></span></div>
     ${sec('cards','Cosa include','<ul class="feat"><li>Partita singola a due giocatori contro il computer</li><li>Tre livelli: Facile, Medio e Difficile</li><li>Punteggi in tempo reale e suoni delle carte</li><li>Partita salvata e statistiche</li><li>Temi, sfondi del tavolo e testo ingrandibile</li></ul>')}
     ${sec('levels','Le tue partite',`<p>Partite giocate: <b>${tot}</b> · vinte: <b>${won}</b>.</p>`)}
     ${sec('info','Crediti','<p>Ideata e voluta da <b>Miki</b>, sviluppata con Claude di Anthropic.</p><p>Carte, tavolo e suoni sono disegnati e generati nel codice: nessuna immagine o file audio esterno.</p>')}
@@ -974,6 +993,7 @@ window.addEventListener('resize',()=>{
 
 /* ================== AVVIO ================== */
 applyTheme();applySound();buildFan();
+document.querySelectorAll('.pot .pc').forEach(e=>{e.innerHTML=BACK_SVG});
 applyDur();
 computeLayout();syncStart();
 $('badge').style.display='none';$('deckPile').style.display='none';
