@@ -75,6 +75,7 @@ button{font-family:inherit;color:inherit}
 .pot{position:absolute;right:0;z-index:20;width:0;height:0}
 .pot .pc{position:absolute;right:calc(var(--cw)*-.2);top:0;width:calc(var(--cw)*.52);height:calc(var(--ch)*.52);border-radius:7px;overflow:hidden;box-shadow:0 3px 8px rgba(0,0,0,.45);transform:rotate(-3deg)}
 .pot .pc svg{width:100%;height:100%;display:block}
+.pot.empty .pc{display:none}
 .pot .bd{position:absolute;right:calc(var(--cw)*.32 - 10px);top:calc(var(--ch)*.26 - 22px);width:44px;height:44px;border-radius:50%;background:#14603f;border:3px solid #0a3a26;color:#fff;
   font:800 calc(21px*var(--ts)) var(--sans);display:grid;place-items:center;box-shadow:0 3px 8px rgba(0,0,0,.45);font-variant-numeric:tabular-nums}
 .pot .bd.bump{animation:bump .5s}
@@ -653,6 +654,7 @@ function renderTrump(){
 }
 function renderScores(winner,pts){
   $('oppPt').textContent=G.pts[1];$('mePt').textContent=G.pts[0];
+  $('potOpp').classList.toggle('empty',G.pts[1]===0);$('potMe').classList.toggle('empty',G.pts[0]===0);
   if(winner!==undefined&&pts>0){const el=winner===0?$('mePt'):$('oppPt');el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump')}
 }
 function setTurn(side){$('status').textContent=side===0?'Tocca a te':''}
@@ -932,7 +934,7 @@ const SHEETS={
   info:{title:'Info e crediti',html:()=>{
     const tot=Object.values(STATS).reduce((n,x)=>n+x.w+x.l+x.d,0),won=Object.values(STATS).reduce((n,x)=>n+x.w,0);
     return `<div class="hero"><div class="mf">${[[9,0,-12],[39,48,0],[17,96,12]].map(c=>`<div style="left:${c[1]}px;transform:rotate(${c[2]}deg)">${faceSVG(c[0])}</div>`).join('')}</div>
-      <h2>Briscola by Miki</h2><p>La briscola contro il computer</p><span class="pill">Versione <span id="app-version">3.1</span></span></div>
+      <h2>Briscola by Miki</h2><p>La briscola contro il computer</p><span class="pill">Versione <span id="app-version">3.2</span></span></div>
     ${sec('cards','Cosa include','<ul class="feat"><li>Partita singola a due giocatori contro il computer</li><li>Tre livelli: Facile, Medio e Difficile</li><li>Punteggi in tempo reale e suoni delle carte</li><li>Partita salvata e statistiche</li><li>Temi, sfondi del tavolo e testo ingrandibile</li></ul>')}
     ${sec('levels','Le tue partite',`<p>Partite giocate: <b>${tot}</b> · vinte: <b>${won}</b>.</p>`)}
     ${sec('info','Crediti','<p>Ideata e voluta da <b>Miki</b>, sviluppata con Claude di Anthropic.</p><p>Carte, tavolo e suoni sono disegnati e generati nel codice: nessuna immagine o file audio esterno.</p>')}
