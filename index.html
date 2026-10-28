@@ -686,7 +686,7 @@ const sfx={
   deal(){burst({type:'highpass',f:3200,q:.7,dur:.045,gain:.3});burst({f:5200,q:1.2,dur:.03,gain:.25,delay:.012})},
   flip(){burst({f:1700,f2:5200,q:.9,dur:.1,gain:.4})},
   play(){sfx.deal()},  /* giocare una carta (tu o l'avversario) ha lo stesso suono di quando si danno le carte */
-  collect(){burst({f:700,f2:3300,q:.8,dur:.24,gain:.3});burst({f:900,f2:3000,q:.8,dur:.18,gain:.22,delay:.11})},
+  collect(){sfx.deal()},  /* anche la raccolta della mano ha il suono della distribuzione */
   ding(n){tone({f:880,dur:.35,gain:.13});tone({f:1318,dur:.4,gain:.1,delay:.07});if(n>=14)tone({f:1760,dur:.45,gain:.08,delay:.14})},
   win(){[523,659,784,1047].forEach((f,i)=>tone({f,type:'triangle',dur:.38,gain:.25,delay:i*.14}))},
   lose(){[392,330,262].forEach((f,i)=>tone({f,type:'sawtooth',dur:.4,gain:.1,delay:i*.2}))},
@@ -1067,7 +1067,7 @@ const SHEETS={
   info:{title:'Info e crediti',html:()=>{
     const tot=Object.values(STATS).reduce((n,x)=>n+x.w+x.l+x.d,0),won=Object.values(STATS).reduce((n,x)=>n+x.w,0);
     return `<div class="hero"><div class="mf">${[[9,0,-12],[39,48,0],[17,96,12]].map(c=>`<div style="left:${c[1]}px;transform:rotate(${c[2]}deg)">${faceSVG(c[0])}</div>`).join('')}</div>
-      <h2>Briscola by Miki</h2><p>La briscola contro il computer</p><span class="pill">Versione <span id="app-version">3.4</span></span></div>
+      <h2>Briscola by Miki</h2><p>La briscola contro il computer</p><span class="pill">Versione <span id="app-version">3.5</span></span></div>
     ${sec('cards','Cosa include','<ul class="feat"><li>Partita singola a due giocatori contro il computer</li><li>Tre livelli: Facile, Medio e Difficile</li><li>Punteggi in tempo reale e suoni delle carte</li><li>Partita salvata e statistiche</li><li>Temi, sfondi del tavolo e testo ingrandibile</li></ul>')}
     ${sec('levels','Le tue partite',`<p>Partite giocate: <b>${tot}</b> · vinte: <b>${won}</b>.</p>`)}
     ${sec('info','Crediti','<p>Ideata e voluta da <b>Miki</b>, sviluppata con Claude di Anthropic.</p><p>Carte, tavolo e suoni sono disegnati e generati nel codice: nessuna immagine o file audio esterno.</p>')}
