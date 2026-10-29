@@ -82,7 +82,7 @@ button{font-family:inherit;color:inherit}
 .pot .bd.bump{animation:bump .5s}
 
 #deckPile .back{background:#9aa0a6}
-.card .back,.pot .pc,#deckPile .back{background:var(--backImg) center/100% 100% no-repeat #9aa0a6}
+.card .back,.pot .pc,#deckPile .back{background:var(--backImg) center/100% 100% no-repeat;background-color:var(--backTint,#fff);background-blend-mode:multiply}
 #badge{position:absolute;z-index:26;min-width:42px;height:42px;padding:0 8px;border-radius:14px;display:grid;place-items:center;
   background:linear-gradient(#58c7ff,#1b78d0);border:3px solid #0b3560;color:#fff;font:800 22px var(--serif);
   text-shadow:0 2px 0 #0b3560;transform:translate(-50%,-50%);box-shadow:0 3px 8px rgba(0,0,0,.4)}
@@ -201,6 +201,35 @@ table.st td:first-child,table.st th:first-child{text-align:left}
 .reduce .plaque .pt.bump,.reduce .pop{animation:none}
 .reduce .pop{display:none}
 .reduce #fx{display:none}
+/* ---- finestra di dialogo ---- */
+.dlgOv{position:fixed;inset:0;z-index:130;display:grid;place-items:center;padding:26px 22px;background:rgba(3,14,9,.7);-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
+.dlgBox{width:100%;max-width:340px;margin-top:28px;background:var(--panel);color:var(--panel-ink);border-radius:24px;padding:0 22px 20px;text-align:center;box-shadow:0 0 0 1.5px var(--gold) inset,0 24px 54px rgba(0,0,0,.55);animation:dlgIn .24s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes dlgIn{from{opacity:0;transform:translateY(14px) scale(.94)}to{opacity:1;transform:none}}
+.dlgIcon{width:64px;height:64px;margin:-32px auto 14px;border-radius:50%;display:grid;place-items:center;font-size:30px;background:linear-gradient(#f6d977,#d9a72f);box-shadow:0 0 0 5px var(--panel),0 6px 14px rgba(0,0,0,.35)}
+.dlgBox h3{margin:0 0 8px;font:700 calc(23px*var(--ts))/1.2 var(--serif)}
+.dlgBox p{margin:0;font-size:calc(15.5px*var(--ts));line-height:1.5;opacity:.85}
+.dlgBtns{display:flex;gap:10px;margin-top:22px}
+.dlgBtn{flex:1;border:0;border-radius:14px;padding:14px 8px;font:700 calc(16px*var(--ts)) var(--sans);cursor:pointer;background:linear-gradient(#f3d06c,#d9a72f);color:#2a1d00;box-shadow:0 3px 0 #a67c1b}
+.dlgBtn:active{transform:translateY(2px);box-shadow:0 1px 0 #a67c1b}
+.dlgBtn.ghost{background:transparent;color:inherit;box-shadow:inset 0 0 0 1.5px var(--line)}
+.dlgBtn.danger{background:linear-gradient(#e8665a,#b3342c);color:#fff;box-shadow:0 3px 0 #7d211b}
+.reduce .dlgBox{animation:none}
+/* ---- missioni, campionato, statistiche ---- */
+.rewardToast{white-space:pre-line}
+.mBar{height:8px;border-radius:6px;background:rgba(127,127,127,.25);overflow:hidden;margin:8px 0 2px}
+.mBar i{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#d9a72f,#f3d06c)}
+.mDone .mBar i{background:linear-gradient(90deg,#2e9b5f,#6fdc9a)}
+.statGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+.statBox{border-radius:14px;padding:12px 4px;text-align:center;background:var(--panel-soft);box-shadow:0 0 0 1px var(--line) inset}
+.statBox b{display:block;font:700 calc(22px*var(--ts)) var(--serif)}
+.statBox small{font-size:calc(12.5px*var(--ts));opacity:.8}
+.lvStat{margin:12px 0}
+.lvStat .top{display:flex;justify-content:space-between;gap:8px;font-size:calc(14.5px*var(--ts));font-weight:700}
+.lgRow{display:flex;gap:12px;align-items:center}
+.lgNum{flex:none;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font:700 calc(16px*var(--ts)) var(--serif);background:var(--felt2);color:#ffe9a8;box-shadow:0 0 0 2px var(--gold)}
+.lgRow.done .lgNum{background:#2e9b5f;color:#fff}
+.lgRow.locked{opacity:.55}
+#sheetBody h4.shopH{margin:22px 0 4px}
 @media (prefers-reduced-motion:reduce){.card,.card .in{transition-duration:.15s!important}}
 
 /* Progressione cosmetica: separata dal motore della partita */
@@ -295,11 +324,12 @@ table.st td:first-child,table.st th:first-child{text-align:left}
     </div>
     <p id="lvDesc"></p>
     <section id="progressPanel" aria-label="Profilo giocatore">
-      <div class="progressTop"><div><small>IL TUO PROFILO</small><strong id="xpLevel">Livello 1</strong></div><div class="coinPill">✦ <b id="coinBalance">0</b> monete</div></div>
+      <div class="progressTop"><div><small id="xpTitle">IL TUO PROFILO</small><strong id="xpLevel">Livello 1</strong></div><div class="coinPill">✦ <b id="coinBalance">0</b> monete</div></div>
       <div class="xpTrack"><i id="xpBar"></i></div><small id="xpCaption">0 / 100 XP al prossimo livello</small>
-      <div class="progressActions"><button data-career="daily">🎁 Ricompense</button><button data-career="trophies">🏆 Trofei</button><button data-career="shop">🛍 Negozio</button></div>
+      <div class="progressActions"><button data-career="missions">🎯 Missioni</button><button data-career="daily">🎁 Ricompense</button><button data-career="trophies">🏆 Trofei</button><button data-career="shop">🛍 Negozio</button><button data-career="stats">📊 Statistiche</button></div>
     </section>
     <button class="btn" id="goNew">Nuova partita</button>
+    <button class="btn ghost" data-career="league">🏁 Campionato</button>
     <button class="btn ghost hidden" id="goResume">Continua partita</button>
   </div>
 </div>
@@ -318,6 +348,10 @@ table.st td:first-child,table.st th:first-child{text-align:left}
 <div id="sheet" class="hidden">
   <div class="bar"><button class="ib" id="sheetBack" aria-label="Indietro"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7"/></svg></button><h3 id="sheetTitle"></h3><button class="closeTop" id="sheetClose">Chiudi</button></div>
   <div id="sheetBody"></div>
+</div>
+<div id="dlg" class="dlgOv hidden" role="dialog" aria-modal="true" aria-labelledby="dlgTitle">
+  <div class="dlgBox"><div class="dlgIcon" id="dlgIcon"></div><h3 id="dlgTitle"></h3><p id="dlgMsg"></p>
+    <div class="dlgBtns"><button class="dlgBtn ghost" id="dlgCancel">Annulla</button><button class="dlgBtn" id="dlgOk">OK</button></div></div>
 </div>
 <div id="fx"></div>
 
@@ -466,41 +500,69 @@ const LV_DESC={
   facile:'L’avversario gioca spesso a caso: ideale per imparare.',
   medio:'Sceglie con criterio: prende le mani con punti e risparmia le briscole.',
   difficile:'Conta le carte uscite e simula la partita: non perdona gli errori.'};
-let S=Object.assign({level:'medio',sound:true,vol:0.7,spd:2,themeMode:'auto',grad:'feltro',ts:1,reduce:false},LS.get('briscola2_settings',{}));
+let S=Object.assign({level:'medio',sound:true,vol:0.7,spd:2,back:'back_default',vibe:true,themeMode:'auto',grad:'feltro',ts:1,reduce:false},LS.get('briscola2_settings',{}));
 let STATS=LS.get('briscola2_stats',{facile:{w:0,l:0,d:0},medio:{w:0,l:0,d:0},difficile:{w:0,l:0,d:0}});
 const saveS=()=>LS.set('briscola2_settings',S);
 const saveStats=()=>LS.set('briscola2_stats',STATS);
 const CAREER_KEY='briscola2_career_v1';
-const CAREER_DEFAULT={coins:0,xp:0,wins:0,streak:0,bestStreak:0,claimedDay:'',dayRun:0,owned:['feltro'],equipped:'feltro',trophies:[]};
+const CAREER_DEFAULT={coins:0,xp:0,wins:0,streak:0,bestStreak:0,claimedDay:'',dayRun:0,owned:['feltro','back_default'],equipped:'feltro',trophies:[],games:0,points:0,bestScore:0,mission:null,league:{cleared:0}};
 let CAREER=Object.assign({},CAREER_DEFAULT,LS.get(CAREER_KEY,{}));
-/* fondali del tavolo: quelli a pagamento si sbloccano solo dal Negozio; gli altri (Foresta, Lavanda, Corallo, Carbone) restano gratuiti in Impostazioni */
+CAREER.owned=(CAREER.owned||[]).slice();CAREER.trophies=(CAREER.trophies||[]).slice();CAREER.league=Object.assign({cleared:0},CAREER.league);
+/* Negozio: i fondali e i dorsi a pagamento si sbloccano solo da qui (gli altri fondali sono gratuiti in Impostazioni) */
 const SHOP_ITEMS=[
  {id:'feltro',name:'Feltro classico',desc:'Il tavolo originale',price:0,kind:'table',grad:'feltro'},
+ {id:'rubino',name:'Rubino',desc:'Rosso intenso, da sala da gioco',price:400,kind:'table',grad:'rubino'},
  {id:'oceano',name:'Oceano regale',desc:'Blu profondo e dettagli eleganti',price:250,kind:'table',grad:'oceano'},
  {id:'tramonto',name:'Tramonto d’oro',desc:'Caldo e scenografico',price:350,kind:'table',grad:'tramonto'},
  {id:'notte',name:'Notte stellata',desc:'Un tavolo scuro e raffinato',price:450,kind:'table',grad:'notte'},
+ {id:'indaco',name:'Indaco',desc:'Un blu viola elegante',price:500,kind:'table',grad:'indaco'},
  {id:'aurora',name:'Aurora',desc:'Verde acqua e viola',price:550,kind:'table',grad:'aurora'},
- {id:'petrolio',name:'Petrolio',desc:'Tonalità sobrie e moderne',price:650,kind:'table',grad:'petrolio'}
+ {id:'ghiaccio',name:'Ghiaccio',desc:'Azzurro freddo e luminoso',price:600,kind:'table',grad:'ghiaccio'},
+ {id:'petrolio',name:'Petrolio',desc:'Tonalità sobrie e moderne',price:650,kind:'table',grad:'petrolio'},
+ {id:'smeraldo',name:'Smeraldo',desc:'Verde gemma, ricco e profondo',price:700,kind:'table',grad:'smeraldo'},
+ {id:'oro',name:'Oro antico',desc:'Il tavolo dei campioni',price:900,kind:'table',grad:'oro'},
+ {id:'back_default',name:'Dorso classico',desc:'L’incisione originale con le torri',price:0,kind:'back',tint:'#ffffff'},
+ {id:'back_rubino',name:'Dorso rubino',desc:'Riflessi rossi sull’incisione',price:300,kind:'back',tint:'#f2857a'},
+ {id:'back_zaffiro',name:'Dorso zaffiro',desc:'Un blu profondo',price:300,kind:'back',tint:'#8aa9ee'},
+ {id:'back_smeraldo',name:'Dorso smeraldo',desc:'Verde bosco',price:350,kind:'back',tint:'#86d89a'},
+ {id:'back_oro',name:'Dorso oro',desc:'Caldo e prezioso',price:450,kind:'back',tint:'#efcf72'},
+ {id:'back_ametista',name:'Dorso ametista',desc:'Sfumature viola',price:450,kind:'back',tint:'#c39cf0'}
 ];
+/* titoli legati al livello */
+const TITLES=[[1,'Novizio'],[3,'Apprendista'],[5,'Giocatore'],[8,'Esperto'],[12,'Campione'],[17,'Maestro'],[25,'Gran Maestro']];
+function careerTitle(l){let t=TITLES[0][1];TITLES.forEach(x=>{if(l>=x[0])t=x[1]});return t}
 function saveCareer(){LS.set(CAREER_KEY,CAREER)}
 function careerLevel(){return Math.floor(Math.max(0,CAREER.xp)/100)+1}
+if(CAREER.lvl===undefined)CAREER.lvl=careerLevel();
 function careerProgress(){
  const level=careerLevel(),xp=Math.max(0,CAREER.xp)%100;
  if($('coinBalance'))$('coinBalance').textContent=CAREER.coins;
  if($('xpLevel'))$('xpLevel').textContent='Livello '+level;
+ if($('xpTitle'))$('xpTitle').textContent=careerTitle(level).toUpperCase();
  if($('xpBar'))$('xpBar').style.width=xp+'%';
  if($('xpCaption'))$('xpCaption').textContent=xp+' / 100 XP al prossimo livello';
 }
 function rewardToast(msg){
  const old=document.querySelector('.rewardToast');if(old)old.remove();
  const el=document.createElement('div');el.className='rewardToast';el.textContent=msg;document.body.appendChild(el);
- setTimeout(()=>el.remove(),3000);
+ setTimeout(()=>el.remove(),Math.min(7000,2800+msg.length*28));
 }
-function careerAward(result,level){
- const before=careerLevel();
+/* vibrazione (solo dove il telefono la supporta) */
+function vibe(p){if(S.vibe!==false&&navigator.vibrate){try{navigator.vibrate(p)}catch(e){}}}
+/* salita di livello: bonus monete e finestra di festeggiamento */
+async function levelCheck(){
+ const lv=careerLevel();
+ if(lv<=CAREER.lvl)return;
+ const gained=lv-CAREER.lvl,bonus=gained*50,oldTitle=careerTitle(CAREER.lvl);
+ CAREER.lvl=lv;CAREER.coins+=bonus;saveCareer();careerProgress();
+ const t=careerTitle(lv);vibe([30,50,30,50,120]);sfx.win();
+ await askDialog({icon:'⭐',title:'Livello '+lv+' raggiunto!',message:(t!==oldTitle?'Nuovo titolo: '+t+'. ':'Il tuo titolo: '+t+'. ')+'Bonus di '+bonus+' monete.',ok:'Fantastico!',single:true});
+}
+function careerAward(result,level,score){
  const coins=result==='w'?({facile:100,medio:150,difficile:200}[level]||100):0;
  const xp=result==='w'?({facile:25,medio:40,difficile:55}[level]||25):(result==='d'?10:5);
  CAREER.xp+=xp;
+ CAREER.games=(CAREER.games||0)+1;CAREER.points=(CAREER.points||0)+(score||0);CAREER.bestScore=Math.max(CAREER.bestScore||0,score||0);
  if(result==='w'){CAREER.coins+=coins;CAREER.wins++;CAREER.streak++;CAREER.bestStreak=Math.max(CAREER.bestStreak,CAREER.streak)}
  else CAREER.streak=0;
  const newly=[];
@@ -509,16 +571,78 @@ function careerAward(result,level){
   ['wins10','Dieci vittorie',CAREER.wins>=10,200],
   ['wins50','Leggenda della briscola',CAREER.wins>=50,500],
   ['streak3','Tre vittorie di fila',CAREER.bestStreak>=3,150],
-  ['hard5','Maestro difficile',((STATS.difficile||{}).w||0)>=5,250]
+  ['streak5','Cinque vittorie di fila',CAREER.bestStreak>=5,300],
+  ['hard5','Maestro difficile',((STATS.difficile||{}).w||0)>=5,250],
+  ['lv10','Livello 10',(careerLevel()>=10),400]
  ];
  defs.forEach(d=>{if(d[2]&&!CAREER.trophies.includes(d[0])){CAREER.trophies.push(d[0]);CAREER.coins+=d[3];newly.push(d[1]+' (+'+d[3]+' monete)')}});
  saveCareer();careerProgress();
- const levelUp=careerLevel()>before;
- let msg=result==='w'?'+'+coins+' monete · +'+xp+' XP': '+'+xp+' XP';
- if(newly.length)msg+=' · Trofeo: '+newly.join(', ');
- if(levelUp)msg+=' · Livello '+careerLevel()+' raggiunto!';
- rewardToast(msg);
- return {coins,xp,newly,levelUp};
+ let msg=result==='w'?'+'+coins+' monete · +'+xp+' XP':'+'+xp+' XP';
+ if(newly.length)msg+='\nTrofeo: '+newly.join(', ');
+ return {coins,xp,newly,msg};
+}
+/* ---------- missioni giornaliere ---------- */
+const MISSION_POOL=[
+ {id:'play',metric:'games',text:n=>'Gioca '+n+' partite',goals:[2,3],coins:60},
+ {id:'win',metric:'wins',text:n=>n===1?'Vinci una partita':'Vinci '+n+' partite',goals:[1,2],coins:80},
+ {id:'winMed',metric:'winsMed',text:()=>'Vinci una partita a Medio o Difficile',goals:[1],coins:120},
+ {id:'aces',metric:'aces',text:n=>'Prendi '+n+' Assi',goals:[2,3,4],coins:80},
+ {id:'threes',metric:'threes',text:n=>'Prendi '+n+' Tre',goals:[2,3,4],coins:80},
+ {id:'trumps',metric:'trumps',text:n=>'Cattura '+n+' carte di briscola',goals:[4,6,8],coins:80},
+ {id:'score',metric:'maxScore',text:n=>'Totalizza almeno '+n+' punti in una partita',goals:[70,80,90],coins:100}
+];
+let MISSION_MSGS=[];
+function seedRand(str){let h=2166136261;for(let i=0;i<str.length;i++)h=Math.imul(h^str.charCodeAt(i),16777619);return()=>{h+=0x6D2B79F5;let t=Math.imul(h^h>>>15,1|h);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function missionsEnsure(){
+ const day=dailyKey();
+ if(CAREER.mission&&CAREER.mission.day===day)return;
+ const r=seedRand('missioni'+day),pool=MISSION_POOL.slice(),list=[];
+ for(let i=0;i<3;i++){const p=pool.splice(Math.floor(r()*pool.length),1)[0];list.push({id:p.id,metric:p.metric,goal:p.goals[Math.floor(r()*p.goals.length)],prog:0,done:false,coins:p.coins})}
+ CAREER.mission={day,list,bonus:false};saveCareer();
+}
+function missionText(m){const p=MISSION_POOL.find(x=>x.id===m.id);return p?p.text(m.goal):m.id}
+function missionEvent(metric,amount){
+ missionsEnsure();const M=CAREER.mission,done=[];
+ M.list.forEach(m=>{
+  if(m.done||m.metric!==metric)return;
+  m.prog=metric==='maxScore'?Math.max(m.prog,amount):m.prog+amount;
+  if(m.prog>=m.goal){m.prog=m.goal;m.done=true;CAREER.coins+=m.coins;CAREER.xp+=20;done.push(missionText(m)+' (+'+m.coins+' monete)')}
+ });
+ if(done.length&&M.list.every(m=>m.done)&&!M.bonus){
+  M.bonus=true;CAREER.coins+=150;CAREER.xp+=30;done.push('tutte le missioni di oggi (+150 monete)');
+  if(!CAREER.trophies.includes('missions3')){CAREER.trophies.push('missions3');CAREER.coins+=100;done.push('trofeo Giornata perfetta (+100 monete)')}
+ }
+ saveCareer();careerProgress();
+ done.forEach(x=>MISSION_MSGS.push(x));
+}
+/* ---------- campionato ---------- */
+const LEAGUE=[
+ {name:'Nonno Gino',level:'facile',desc:'Gioca piano e si distrae spesso.',reward:100},
+ {name:'Zia Rosa',level:'facile',desc:'Carte in mano e chiacchiere a non finire.',reward:150},
+ {name:'Il Barista',level:'medio',desc:'Conosce ogni mossa del bar.',reward:200},
+ {name:'Don Pasquale',level:'medio',desc:'Un avversario paziente e preciso.',reward:250},
+ {name:'Il Capitano',level:'medio',desc:'Non regala mai una presa.',reward:300},
+ {name:'La Contessa',level:'difficile',desc:'Conta le carte e non perdona.',reward:400},
+ {name:'Il Maresciallo',level:'difficile',desc:'Gioca d’anticipo, mano dopo mano.',reward:500},
+ {name:'Il Maestro Genovese',level:'difficile',desc:'Il campione: serve una partita quasi perfetta.',reward:800}
+];
+const LEAGUE_WORLDS=[0,0,0,0,0,240,320,450];
+function leagueCleared(){return CAREER.league.cleared||0}
+function leagueResult(won){
+ const L=G&&G.league;if(!L)return null;const st=LEAGUE[L.stage];
+ if(!won)return {won:false,name:st.name,reward:0};
+ let reward=0;
+ if(L.stage===leagueCleared()){
+  CAREER.league.cleared++;reward=st.reward;CAREER.coins+=reward;
+  if(CAREER.league.cleared>=LEAGUE.length&&!CAREER.trophies.includes('league')){CAREER.trophies.push('league');CAREER.coins+=500;reward+=500}
+ }
+ saveCareer();careerProgress();
+ return {won:true,name:st.name,reward};
+}
+function leagueLaunch(i){
+ auInit();$('sheet').classList.add('hidden');
+ if(NAV.sheet){NAV.sheet=false;NAV.game=true}   /* la voce di cronologia della scheda diventa quella della partita */
+ startNew(LEAGUE[i].level,{league:i});
 }
 function dayStr(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
 function dailyKey(){return dayStr(new Date())}
@@ -541,33 +665,60 @@ function claimDaily(){
 
 function careerSheet(k){
  if(k==='daily')return {title:'Ricompense giornaliere',html:()=>{
- const available=dailyAvailable(),nx=dailyNext();
- const day=available?nx.day:Math.max(1,CAREER.dayRun||1),amount=dailyAmount(day);
- return `<p class="sub">Una ricompensa al giorno su questo dispositivo. Se salti un giorno la serie riparte dal primo. Il settimo giorno ricevi un forziere da 500 monete.</p>
- <div class="careerCard"><div class="careerRow"><div><h4>🎁 Premio del giorno ${day}</h4><p>${available?'Oggi ricevi '+amount+' monete e 10 XP.':'Hai già riscosso oggi ('+amount+' monete). Domani: giorno '+((day%7)+1)+'.'}</p></div><button class="careerBtn" id="claimDaily" ${available?'':'disabled'}>${available?'Riscatta':'Riscosso'}</button></div></div>
- <div class="careerCard"><h4>Calendario dei premi</h4>${Array.from({length:7},(_,i)=>`<p>${i+1===7?'🧰':'✦'} Giorno ${i+1} <span class="careerTag">${dailyAmount(i+1)} monete${i+1===day?(available?' · OGGI':' · RISCOSSO'):''}</span></p>`).join('')}</div>`;
+  const available=dailyAvailable(),nx=dailyNext();
+  const day=available?nx.day:Math.max(1,CAREER.dayRun||1),amount=dailyAmount(day);
+  return `<p class="sub">Una ricompensa al giorno su questo dispositivo. Se salti un giorno la serie riparte dal primo. Il settimo giorno ricevi un forziere da 500 monete.</p>
+  <div class="careerCard"><div class="careerRow"><div><h4>🎁 Premio del giorno ${day}</h4><p>${available?'Oggi ricevi '+amount+' monete e 10 XP.':'Hai già riscosso oggi ('+amount+' monete). Domani: giorno '+((day%7)+1)+'.'}</p></div><button class="careerBtn" id="claimDaily" ${available?'':'disabled'}>${available?'Riscatta':'Riscosso'}</button></div></div>
+  <div class="careerCard"><h4>Calendario dei premi</h4>${Array.from({length:7},(_,i)=>`<p>${i+1===7?'🧰':'✦'} Giorno ${i+1} <span class="careerTag">${dailyAmount(i+1)} monete${i+1===day?(available?' · OGGI':' · RISCOSSO'):''}</span></p>`).join('')}</div>`;
  },bind:()=>{const b=$('claimDaily');if(b)b.onclick=claimDaily}};
+ if(k==='missions')return {title:'Missioni',html:()=>{
+  missionsEnsure();const M=CAREER.mission;
+  return `<p class="sub">Tre nuove missioni ogni giorno. Completandole tutte ricevi un bonus di 150 monete.</p>${M.list.map(m=>`<div class="careerCard ${m.done?'mDone':''}"><div class="careerRow"><div style="flex:1;min-width:0"><h4>${m.done?'✅':'🎯'} ${missionText(m)}</h4><p>Premio: ${m.coins} monete · 20 XP</p></div><span class="careerTag">${m.prog} / ${m.goal}</span></div><div class="mBar"><i style="width:${Math.round(m.prog*100/m.goal)}%"></i></div></div>`).join('')}<div class="careerCard"><div class="careerRow"><div><h4>${M.bonus?'🎉':'🎁'} Bonus della giornata</h4><p>Completa tutte e tre le missioni.</p></div><span class="careerTag">${M.bonus?'OTTENUTO':'+150 monete'}</span></div></div>`;
+ }};
  if(k==='trophies')return {title:'Trofei',html:()=>{
- const ds=[['first','Prima vittoria','Vinci la tua prima partita',100,CAREER.wins>=1],['wins10','Dieci vittorie','Raggiungi 10 vittorie',200,CAREER.wins>=10],['wins50','Leggenda della briscola','Raggiungi 50 vittorie',500,CAREER.wins>=50],['streak3','Tre vittorie di fila','Vinci 3 partite consecutive',150,CAREER.bestStreak>=3],['hard5','Maestro difficile','Vinci 5 partite a livello Difficile',250,(STATS.difficile||{}).w>=5]];
- return `<p class="sub">I trofei si sbloccano giocando. I bonus vengono assegnati una sola volta.</p>${ds.map(d=>`<div class="careerCard"><div class="careerRow"><div><h4>${d[4]?'🏆':'🔒'} ${d[1]}</h4><p>${d[2]}</p></div><span class="careerTag">${CAREER.trophies.includes(d[0])?'OTTENUTO': '+'+d[3]+' monete'}</span></div></div>`).join('')}`;
+  const ds=[['first','Prima vittoria','Vinci la tua prima partita',100],['wins10','Dieci vittorie','Raggiungi 10 vittorie',200],['wins50','Leggenda della briscola','Raggiungi 50 vittorie',500],['streak3','Tre vittorie di fila','Vinci 3 partite consecutive',150],['streak5','Cinque vittorie di fila','Vinci 5 partite consecutive',300],['hard5','Maestro difficile','Vinci 5 partite a livello Difficile',250],['lv10','Livello 10','Raggiungi il livello 10',400],['missions3','Giornata perfetta','Completa le tre missioni in un giorno',100],['league','Campione del campionato','Batti tutti gli avversari del campionato',500]];
+  const got=ds.filter(d=>CAREER.trophies.includes(d[0])).length;
+  return `<p class="sub">I trofei si sbloccano giocando. I bonus vengono assegnati una sola volta. Ne hai ottenuti ${got} su ${ds.length}.</p>${ds.map(d=>{const ok=CAREER.trophies.includes(d[0]);return `<div class="careerCard"><div class="careerRow"><div><h4>${ok?'🏆':'🔒'} ${d[1]}</h4><p>${d[2]}</p></div><span class="careerTag">${ok?'OTTENUTO':'+'+d[3]+' monete'}</span></div></div>`}).join('')}`;
  }};
  if(k==='shop')return {title:'Negozio cosmetico',html:()=>{
- const icon={feltro:'🌿',oceano:'🌊',tramonto:'🌅',notte:'🌙',aurora:'✨',petrolio:'💠'};
- return `<p class="sub">Solo personalizzazioni estetiche: nessun vantaggio in partita. Le monete restano salvate su questo dispositivo. I fondali Foresta, Lavanda, Corallo e Carbone sono gratuiti e si scelgono in Impostazioni.</p><div class="careerCard"><div class="careerRow"><h4>Saldo</h4><strong>✦ ${CAREER.coins} monete</strong></div></div>${SHOP_ITEMS.map(it=>{
-  const owned=CAREER.owned.includes(it.id),inUse=S.grad===it.grad,g=GRADS.find(x=>x.id===it.grad)||GRADS[0],miss=it.price-CAREER.coins;
-  const tag=owned?(inUse?'IN USO':'SBLOCCATO'):it.price+' monete'+(miss>0?' · te ne mancano '+miss:'');
-  return `<div class="careerCard"><div class="careerRow"><div><h4>${icon[it.id]||'🎨'} ${it.name}</h4><p>${it.desc}</p><span class="careerTag">${tag}</span></div><button class="careerBtn" data-buy="${it.id}" ${(!owned&&miss>0)||inUse?'disabled':''}>${inUse?'In uso':owned?'Usa':'Acquista'}</button></div><div class="swatch" style="background:linear-gradient(135deg,${g.a},${g.b})"></div></div>`}).join('')}`;
+  const icon={feltro:'🌿',rubino:'♦️',oceano:'🌊',tramonto:'🌅',notte:'🌙',indaco:'🔮',aurora:'✨',ghiaccio:'❄️',petrolio:'💠',smeraldo:'💚',oro:'👑'};
+  const card=it=>{
+   const owned=it.price===0||CAREER.owned.includes(it.id),inUse=it.kind==='back'?((S.back||'back_default')===it.id):S.grad===it.grad,miss=it.price-CAREER.coins;
+   const g=it.kind==='table'?(GRADS.find(x=>x.id===it.grad)||GRADS[0]):null;
+   const tag=owned?(inUse?'IN USO':'SBLOCCATO'):it.price+' monete'+(miss>0?' · te ne mancano '+miss:'');
+   const sw=g?`background:linear-gradient(135deg,${g.a},${g.b})`:`background:${it.tint};border:1px solid rgba(0,0,0,.25)`;
+   return `<div class="careerCard"><div class="careerRow"><div><h4>${it.kind==='back'?'🃏':(icon[it.id]||'🎨')} ${it.name}</h4><p>${it.desc}</p><span class="careerTag">${tag}</span></div><button class="careerBtn" data-buy="${it.id}" ${(!owned&&miss>0)||inUse?'disabled':''}>${inUse?'In uso':owned?'Usa':'Acquista'}</button></div><div class="swatch" style="${sw}"></div></div>`;
+  };
+  const by=kind=>SHOP_ITEMS.filter(x=>x.kind===kind).sort((a,b)=>a.price-b.price);
+  return `<p class="sub">Solo personalizzazioni estetiche: nessun vantaggio in partita. Le monete restano salvate su questo dispositivo. I fondali Foresta, Lavanda, Corallo e Carbone sono gratuiti e si scelgono in Impostazioni.</p><div class="careerCard"><div class="careerRow"><h4>Saldo</h4><strong>✦ ${CAREER.coins} monete</strong></div></div><h4 class="shopH">Fondali del tavolo</h4>${by('table').map(card).join('')}<h4 class="shopH">Dorsi delle carte</h4>${by('back').map(card).join('')}`;
  },bind:()=>{document.querySelectorAll('[data-buy]').forEach(b=>b.onclick=()=>buyItem(b.dataset.buy))}};
+ if(k==='league')return {title:'Campionato',html:()=>{
+  const cl=leagueCleared();
+  return `<p class="sub">Batti otto avversari uno dopo l’altro: ogni vittoria sblocca il successivo e ti fa guadagnare monete. Dopo l’ultimo ricevi il trofeo di Campione.</p>${LEAGUE.map((o,i)=>{
+   const st=i<cl?'done':(i===cl?'cur':'locked');
+   const act=i<cl?`<button class="careerBtn" data-lg="${i}">Rigioca</button>`:(i===cl?`<button class="careerBtn" data-lg="${i}">Sfida</button>`:'<span>🔒</span>');
+   return `<div class="careerCard"><div class="lgRow ${st}"><div class="lgNum">${i<cl?'✓':i+1}</div><div style="flex:1;min-width:0"><h4>${o.name}</h4><p>${o.desc}</p><span class="careerTag">${LEVELS[o.level]} · ${i<cl?'VINTA':o.reward+' monete'}</span></div>${act}</div></div>`}).join('')}${cl>=LEAGUE.length?'<div class="careerCard"><h4>🏆 Sei il campione!</h4><p>Hai battuto tutti gli avversari. Puoi rigiocare qualsiasi tappa, ma i premi si ricevono una volta sola.</p></div>':''}`;
+ },bind:()=>{document.querySelectorAll('[data-lg]').forEach(b=>b.onclick=()=>leagueLaunch(+b.dataset.lg))}};
+ if(k==='stats')return {title:'Statistiche',html:()=>{
+  const lv=['facile','medio','difficile'];let w=0,l=0,d=0;
+  lv.forEach(x=>{const s=STATS[x]||{};w+=s.w||0;l+=s.l||0;d+=s.d||0});
+  const tot=w+l+d,pct=tot?Math.round(w*100/tot):0,avg=CAREER.games?Math.round(CAREER.points/CAREER.games):'–';
+  return `<div class="statGrid">${[[tot,'Partite'],[w,'Vittorie'],[pct+'%','Vinte'],[CAREER.bestStreak||0,'Serie migliore'],[avg,'Punti medi'],[CAREER.bestScore||'–','Record punti']].map(x=>`<div class="statBox"><b>${x[0]}</b><small>${x[1]}</small></div>`).join('')}</div><h4 class="shopH">Per livello</h4>${lv.map(x=>{const s=STATS[x]||{w:0,l:0,d:0},t=s.w+s.l+s.d,p=t?Math.round(s.w*100/t):0;return `<div class="lvStat"><div class="top"><span>${LEVELS[x]}</span><span>${p}% · ${s.w} V · ${s.l} S · ${s.d} P</span></div><div class="mBar"><i style="width:${p}%"></i></div></div>`}).join('')}<p class="sub">Punti medi e record contano dalle partite giocate dalla versione 4.0 in poi. V = vittorie, S = sconfitte, P = pareggi.</p>`;
+ }};
 }
 function gradLocked(id){const it=SHOP_ITEMS.find(x=>x.grad===id);return !!it&&it.price>0&&!CAREER.owned.includes(it.id)}
-function buyItem(id){
+function backLocked(id){const it=SHOP_ITEMS.find(x=>x.id===id&&x.kind==='back');return !!it&&it.price>0&&!CAREER.owned.includes(it.id)}
+async function buyItem(id){
  const it=SHOP_ITEMS.find(x=>x.id===id);if(!it)return;
- if(!CAREER.owned.includes(id)){
+ if(it.price>0&&!CAREER.owned.includes(id)){
   if(CAREER.coins<it.price)return;
-  if(!confirm('Acquistare "'+it.name+'" per '+it.price+' monete?'))return;
+  const ok=await askDialog({icon:'🛍',title:'Acquistare "'+it.name+'"?',message:'Costa '+it.price+' monete. Dopo l’acquisto te ne resteranno '+(CAREER.coins-it.price)+'.',ok:'Acquista',cancel:'Annulla'});
+  if(!ok)return;
   CAREER.coins-=it.price;CAREER.owned.push(id);
  }
- CAREER.equipped=id;S.grad=it.grad;saveCareer();saveS();applyTheme();careerProgress();openSheet('shop');
+ CAREER.equipped=id;
+ if(it.kind==='back')S.back=id;else S.grad=it.grad;
+ saveCareer();saveS();applyTheme();careerProgress();openSheet('shop');
 }
 
 const SPD_TAB=[2.2,1.5,1.0];
@@ -579,7 +730,10 @@ const GRADS=[
  {id:'oceano',n:'Oceano',a:'#2f8fcf',b:'#0e3a6b'},{id:'notte',n:'Notte',a:'#3a4a8a',b:'#0b1030'},
  {id:'foresta',n:'Foresta',a:'#4c9a4f',b:'#14401f'},{id:'aurora',n:'Aurora',a:'#2fb59a',b:'#4a2d8a'},
  {id:'lavanda',n:'Lavanda',a:'#9a78d6',b:'#3d2a78'},{id:'corallo',n:'Corallo',a:'#ea6a6a',b:'#8a2340'},
- {id:'petrolio',n:'Petrolio',a:'#2b8a94',b:'#0b3a45'},{id:'carbone',n:'Carbone',a:'#4d5560',b:'#14171c'}];
+ {id:'petrolio',n:'Petrolio',a:'#2b8a94',b:'#0b3a45'},{id:'carbone',n:'Carbone',a:'#4d5560',b:'#14171c'},
+ {id:'rubino',n:'Rubino',a:'#d0485b',b:'#4a0e1c'},{id:'indaco',n:'Indaco',a:'#6d72f0',b:'#1d1b52'},
+ {id:'oro',n:'Oro antico',a:'#d9b13f',b:'#5a3a08'},{id:'ghiaccio',n:'Ghiaccio',a:'#6cc9ee',b:'#0b4468'},
+ {id:'smeraldo',n:'Smeraldo',a:'#30c48a',b:'#05452f'}];
 const TS=[.9,1,1.15,1.3];
 const mixK=(hex,k)=>{const n=parseInt(hex.slice(1),16);return '#'+[(n>>16)&255,(n>>8)&255,n&255].map(v=>Math.round(v*(1-k)).toString(16).padStart(2,'0')).join('')};
 const darkMQ=window.matchMedia?matchMedia('(prefers-color-scheme: dark)'):null;
@@ -804,13 +958,14 @@ function newGameState(level){
     tbl:[null,null],pts:[0,0],capt:[0,0],played:[],lead:Math.random()<.5?0:1,bOwner:null,briShown:false,
     phase:'idle',hints:0,over:false,pending:null};
 }
-function startNew(level){
+function startNew(level,opts){
   if(G)G.dead=true;
-  S.level=level;saveS();
+  if(!(opts&&opts.league!==undefined)){S.level=level;saveS()}
   LS.del('briscola2_save');
   $('start').classList.add('hidden');$('end').classList.add('hidden');
   enterGame();
   G=newGameState(level);
+  if(opts&&opts.league!==undefined){G.league={stage:opts.league,name:LEAGUE[opts.league].name};G.worlds=LEAGUE_WORLDS[opts.league]||null}
   runGame(false);
 }
 function resumeGame(){
@@ -823,7 +978,7 @@ function resumeGame(){
 }
 function saveGame(){
   const o={level:G.level,deck:G.deck,B:G.B,T:G.T,hands:G.hands,slots:G.slots,pts:G.pts,capt:G.capt,played:G.played,
-    lead:G.lead,bOwner:G.bOwner,briShown:true,hints:G.hints};
+    lead:G.lead,bOwner:G.bOwner,briShown:true,hints:G.hints,league:G.league||null,worlds:G.worlds||null};
   LS.set('briscola2_save',o);
 }
 async function runGame(resume){
@@ -845,6 +1000,7 @@ async function runGame(resume){
       for(let k=0;k<3;k++){drawCard(0);await wait(150);drawCard(1);await wait(150)}
       await wait(250);G.briShown=true;sfx.flip();render();await wait(650);
       say(G.lead===0?'Inizi tu':'Inizia l’avversario');await wait(800);
+      if(G.league)rewardToast('Tappa '+(G.league.stage+1)+' · '+G.league.name);
     }
     while(true){
       saveGame();
@@ -871,7 +1027,7 @@ function playCard(side,id){
   rm(G.hands[side],id);
   const i=G.slots[side].indexOf(id);if(i>=0)G.slots[side][i]=null;
   G.tbl[side]=id;ZMAP[id]=++Z;
-  sfx.play();render();
+  sfx.play();vibe(12);render();
 }
 async function playerPlay(){
   setTurn(0);
@@ -886,7 +1042,7 @@ function cpuChoose(){
   const t=G.tbl[0];
   if(G.level==='facile')return Math.random()<.72?hand[(Math.random()*hand.length)|0]:heurPick(hand,t,G.T);
   if(G.level==='medio')return heurPick(hand,t,G.T);
-  return pimc(buildView(G,1),320);
+  return pimc(buildView(G,1),G.worlds||320);
 }
 async function cpuPlay(){
   setTurn(1);say(G.lead===1?'Tocca all’avversario…':'L’avversario risponde…');
@@ -905,6 +1061,11 @@ async function resolveTrick(){
   say((w===0?'Hai preso la mano':'Prende l’avversario')+(pts?' · +'+pts+' punti':' · nessun punto'));
   G.pts[w]+=pts;G.capt[w]+=2;G.played.push(cL,cF);G.tbl=[null,null];
   renderScores(w,pts);sfx.collect();if(pts>=10)sfx.ding(pts);
+  if(w===0){
+    vibe(pts>=10?[25,40,45]:16);
+    let a=0,t=0,b=0;[cL,cF].forEach(c=>{if(rankOf(c)===9)a++;if(rankOf(c)===8)t++;if(suitOf(c)===G.T)b++});
+    if(a)missionEvent('aces',a);if(t)missionEvent('threes',t);if(b)missionEvent('trumps',b);
+  }
   const els=[CARDS.get(cL),CARDS.get(cF)];
   els.forEach((el,i)=>{
     el.classList.remove('up');
@@ -921,17 +1082,30 @@ async function finish(){
   setTurn(-1);
   const me=G.pts[0],op=G.pts[1],st=STATS[G.level];
   let k;if(me>60){k='w';st.w++}else if(me<60){k='l';st.l++}else{k='d';st.d++}
+  G.result=k;
   saveStats();
-  careerAward(k,G.level);
-  say(k==='w'?'Partita vinta!':k==='l'?'Partita persa':'Pareggio');
+  const lg=leagueResult(k==='w');
+  const aw=careerAward(k,G.level,me);
+  missionEvent('games',1);
+  if(k==='w'){missionEvent('wins',1);if(G.level!=='facile')missionEvent('winsMed',1)}
+  missionEvent('maxScore',me);
+  const lines=[aw.msg];
+  if(lg&&lg.reward)lines.push('Campionato: +'+lg.reward+' monete');
+  MISSION_MSGS.forEach(x=>lines.push('Missione completata: '+x));MISSION_MSGS=[];
+  rewardToast(lines.join('\n'));
   await wait(900);
-  $('endTitle').textContent=k==='w'?'Hai vinto!':k==='l'?'Hai perso':'Pareggio';
+  const L=G.league;
+  $('endTitle').textContent=L?(k==='w'?'Hai battuto '+L.name+'!':k==='l'?L.name+' ti ha battuto':'Pareggio con '+L.name):(k==='w'?'Hai vinto!':k==='l'?'Hai perso':'Pareggio');
   $('endNum').textContent=me+' – '+op;
   $('endSub').textContent=k==='w'?'Hai chiuso con '+me+' punti contro '+op+'.':k==='l'?'L’avversario ha chiuso con '+op+' punti contro i tuoi '+me+'.':'60 a 60: nessun vincitore.';
-  $('endStat').textContent='Livello '+LEVELS[G.level]+': '+st.w+' vittorie, '+st.l+' sconfitte, '+st.d+' pareggi';
+  $('endStat').textContent=L?'Campionato · tappa '+(L.stage+1)+' di '+LEAGUE.length+(lg&&lg.reward?' · +'+lg.reward+' monete':''):'Livello '+LEVELS[G.level]+': '+st.w+' vittorie, '+st.l+' sconfitte, '+st.d+' pareggi';
+  $('endAgain').textContent=L?(k==='w'?(L.stage+1<LEAGUE.length?'Prossima tappa':'Rigioca l’ultima tappa'):'Riprova la sfida'):'Rivincita';
+  $('endMenu').textContent=L?'Torna alla home':'Cambia livello';
   $('end').classList.remove('hidden');
-  if(k==='w'){sfx.win();confetti()}else if(k==='l')sfx.lose();else sfx.draw();
+  if(k==='w'){sfx.win();vibe([40,60,40,60,160]);confetti()}else if(k==='l'){sfx.lose();vibe(220)}else sfx.draw();
+  levelCheck();
 }
+
 function confetti(){
   const fx=$('fx');fx.innerHTML='';if(S.reduce)return;
   for(let i=0;i<34;i++){
@@ -958,6 +1132,7 @@ function applyTheme(){
   const dk=isDark(),g=GRADS.find(x=>x.id===S.grad)||GRADS[0],k=dk?.42:0,root=document.documentElement;
   root.setAttribute('data-theme',dk?'dark':'light');
   root.style.setProperty('--felt1',mixK(g.a,k));root.style.setProperty('--felt2',mixK(g.b,k));
+  const bk=SHOP_ITEMS.find(x=>x.id===S.back&&x.kind==='back');root.style.setProperty('--backTint',bk?bk.tint:'#fff');
   root.style.setProperty('--ts',TS[S.ts]!==undefined?TS[S.ts]:1);
   root.classList.toggle('reduce',!!S.reduce);
   $('metaTheme').setAttribute('content',mixK(g.b,k));
@@ -973,9 +1148,12 @@ $('btnMenu2').onclick=()=>{auInit();openMenu($('menu').classList.contains('hidde
 $('btnSound').onclick=()=>{auInit();S.sound=!S.sound;saveS();applySound();if(S.sound)sfx.tap()};
 $('mTheme').onclick=()=>{S.themeMode=isDark()?'light':'dark';saveS();applyTheme();openMenu(false)};
 document.querySelectorAll('#menu [data-s]').forEach(b=>b.onclick=()=>{openMenu(false);openSheet(b.dataset.s)});
-$('btnNew').onclick=()=>{
+$('btnNew').onclick=async()=>{
   auInit();
-  if(G&&!G.over&&!confirm('Abbandonare la partita in corso?'))return;
+  if(G&&!G.over){
+    const ok=await askDialog({icon:'🏠',title:'Tornare alla home?',message:'La partita viene salvata: potrai riprenderla da “Continua partita”.',ok:'Vai alla home',cancel:'Resta in gioco'});
+    if(!ok)return;
+  }
   showStart();
 };
 const closeSheet=()=>{
@@ -1032,7 +1210,8 @@ const SHEETS={
     ${sec('tap','Comandi','<ul class="feat"><li>Tocca una carta della tua mano per giocarla: quando tocca a te le carte si alzano.</li><li>I punti tuoi e dell’avversario si aggiornano a ogni mano.</li><li>Dal menu ⋮ puoi cambiare tema, sfondo e dimensione del testo.</li></ul>')}
     ${sec('levels','Livelli',`<div class="lvl"><div class="dot f">Facile</div><span>${LV_DESC.facile}</span></div>
       <div class="lvl"><div class="dot m">Medio</div><span>${LV_DESC.medio}</span></div>
-      <div class="lvl"><div class="dot d">Difficile</div><span>${LV_DESC.difficile}</span></div>`)}`},
+      <div class="lvl"><div class="dot d">Difficile</div><span>${LV_DESC.difficile}</span></div>`)}
+    ${sec('trophy','Profilo, missioni e campionato',`<ul class="feat"><li>Ogni partita dà XP e monete: salendo di livello cambi titolo, da Novizio fino a Gran Maestro, e ricevi un bonus.</li><li>Ogni giorno ci sono tre missioni nuove e un premio giornaliero da riscattare.</li><li>Nel Campionato batti otto avversari in sequenza, sempre più forti.</li><li>Con le monete compri fondali del tavolo e dorsi delle carte nel Negozio.</li><li>Nelle Statistiche trovi vittorie, serie migliore e punti medi.</li></ul>`)}`},
   impostazioni:{title:'Impostazioni',html:()=>`
     <h4>Livello per le nuove partite</h4>
     <div class="seg" id="setLv">${Object.keys(LEVELS).map(k=>`<button data-l="${k}" class="${S.level===k?'on':''}">${LEVELS[k]}</button>`).join('')}</div>
@@ -1046,6 +1225,8 @@ const SHEETS={
     <h4>Audio</h4>
     <div class="row"><span>Suoni</span><button class="sw ${S.sound?'on':''}" id="setSound" role="switch" aria-checked="${S.sound}"><i></i></button></div>
     <div class="row" style="display:block"><span>Volume</span><input type="range" id="setVol" min="0" max="100" value="${Math.round(S.vol*100)}"></div>
+    <div class="row"><span>Vibrazione</span><button class="sw ${S.vibe!==false?'on':''}" id="setVibe" role="switch" aria-checked="${S.vibe!==false}"><i></i></button></div>
+    ${navigator.vibrate?'':'<p class="sub">La vibrazione non è supportata da questo dispositivo.</p>'}
     <h4>Velocità di gioco</h4>
     <div class="seg" id="setSpd">${[[1,'1 · Lenta'],[2,'2 · Media'],[3,'3 · Veloce']].map(v=>`<button data-n="${v[0]}" class="${S.spd===v[0]?'on':''}">${v[1]}</button>`).join('')}</div>
     <p class="sub">Più è lenta, più tempo hai per vedere le carte giocate dall’avversario.</p>
@@ -1057,18 +1238,19 @@ const SHEETS={
     $('setSound').onclick=()=>{auInit();S.sound=!S.sound;saveS();applySound();$('setSound').classList.toggle('on',S.sound);$('setSound').setAttribute('aria-checked',S.sound);if(S.sound)sfx.tap()};
     $('setVol').oninput=e=>{S.vol=e.target.value/100;saveS();if(AU.master)AU.master.gain.value=S.vol};
     $('setVol').onchange=()=>{auInit();sfx.play()};
+    $('setVibe').onclick=()=>{S.vibe=!(S.vibe!==false);saveS();$('setVibe').classList.toggle('on',S.vibe);$('setVibe').setAttribute('aria-checked',S.vibe);if(S.vibe)vibe(30)};
     $('setMode').querySelectorAll('button').forEach(b=>b.onclick=()=>{S.themeMode=b.dataset.m;saveS();applyTheme();$('setMode').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b))});
     $('setGrad').querySelectorAll('button').forEach(b=>b.onclick=()=>{if(gradLocked(b.dataset.g)){rewardToast('Sbloccalo dal Negozio con le monete che guadagni giocando');return}S.grad=b.dataset.g;saveS();applyTheme();$('setGrad').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b))});
     $('setTs').querySelectorAll('button').forEach(b=>b.onclick=()=>{S.ts=+b.dataset.t;saveS();applyTheme();$('setTs').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b))});
     $('setReduce').onclick=()=>{S.reduce=!S.reduce;saveS();applyTheme();$('setReduce').classList.toggle('on',S.reduce);$('setReduce').setAttribute('aria-checked',S.reduce)};
     $('setSpd').querySelectorAll('button').forEach(b=>b.onclick=()=>{S.spd=+b.dataset.n;saveS();applyDur();$('setSpd').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b))});
-    $('resetStats').onclick=()=>{if(confirm('Azzerare tutte le statistiche?')){STATS={facile:{w:0,l:0,d:0},medio:{w:0,l:0,d:0},difficile:{w:0,l:0,d:0}};saveStats();$('statBox').innerHTML=statsTable()}};
+    $('resetStats').onclick=async()=>{const ok=await askDialog({icon:'⚠️',title:'Azzerare le statistiche?',message:'Vittorie, sconfitte e pareggi di tutti i livelli tornano a zero. L’operazione non si può annullare.',ok:'Azzera',cancel:'Annulla',danger:true});if(ok){STATS={facile:{w:0,l:0,d:0},medio:{w:0,l:0,d:0},difficile:{w:0,l:0,d:0}};saveStats();$('statBox').innerHTML=statsTable()}};
    }},
   info:{title:'Info e crediti',html:()=>{
     const tot=Object.values(STATS).reduce((n,x)=>n+x.w+x.l+x.d,0),won=Object.values(STATS).reduce((n,x)=>n+x.w,0);
     return `<div class="hero"><div class="mf">${[[9,0,-12],[39,48,0],[17,96,12]].map(c=>`<div style="left:${c[1]}px;transform:rotate(${c[2]}deg)">${faceSVG(c[0])}</div>`).join('')}</div>
-      <h2>Briscola by Miki</h2><p>La briscola contro il computer</p><span class="pill">Versione <span id="app-version">3.5</span></span></div>
-    ${sec('cards','Cosa include','<ul class="feat"><li>Partita singola a due giocatori contro il computer</li><li>Tre livelli: Facile, Medio e Difficile</li><li>Punteggi in tempo reale e suoni delle carte</li><li>Partita salvata e statistiche</li><li>Temi, sfondi del tavolo e testo ingrandibile</li></ul>')}
+      <h2>Briscola by Miki</h2><p>La briscola contro il computer</p><span class="pill">Versione <span id="app-version">4.0</span></span></div>
+    ${sec('cards','Cosa include','<ul class="feat"><li>Partita singola a due giocatori contro il computer</li><li>Tre livelli: Facile, Medio e Difficile</li><li>Punteggi in tempo reale e suoni delle carte</li><li>Missioni giornaliere, campionato e statistiche</li><li>Profilo con livelli, titoli, monete e trofei</li><li>Negozio di fondali e dorsi</li><li>Temi, sfondi del tavolo e testo ingrandibile</li></ul>')}
     ${sec('levels','Le tue partite',`<p>Partite giocate: <b>${tot}</b> · vinte: <b>${won}</b>.</p>`)}
     ${sec('info','Crediti','<p>Ideata e voluta da <b>Miki</b>, sviluppata con Claude di Anthropic.</p><p>Carte, tavolo e suoni sono disegnati e generati nel codice: nessuna immagine o file audio esterno.</p>')}
     ${sec('shield','I tuoi dati','<p>Impostazioni, statistiche e partita in corso restano solo su questo dispositivo.</p>')}`}}
@@ -1080,6 +1262,28 @@ function openSheet(k){
   $('sheet').classList.remove('hidden');$('sheetBody').scrollTop=0;if(s.bind)s.bind();
   if(!NAV.sheet){NAV.sheet=true;navPush()}
 }
+
+/* ================== FINESTRA DI DIALOGO (al posto dei popup del browser) ================== */
+const DLG={open:false,res:null,single:false};
+function askDialog(o){
+ return new Promise(res=>{
+  if(DLG.open)closeDialog(false);
+  DLG.res=res;DLG.open=true;DLG.single=!!o.single;
+  $('dlgIcon').textContent=o.icon||'❓';$('dlgTitle').textContent=o.title||'';$('dlgMsg').textContent=o.message||'';
+  const ok=$('dlgOk'),ca=$('dlgCancel');
+  ok.textContent=o.ok||'OK';ok.className='dlgBtn'+(o.danger?' danger':'');
+  ca.textContent=o.cancel||'Annulla';ca.style.display=o.single?'none':'';
+  $('dlg').classList.remove('hidden');ok.focus();
+ });
+}
+function closeDialog(v){
+ if(!DLG.open)return;DLG.open=false;$('dlg').classList.add('hidden');
+ const r=DLG.res;DLG.res=null;if(r)r(v);
+}
+$('dlgOk').onclick=()=>closeDialog(true);
+$('dlgCancel').onclick=()=>closeDialog(false);
+$('dlg').addEventListener('click',e=>{if(e.target.id==='dlg')closeDialog(DLG.single)});
+document.addEventListener('keydown',e=>{if(DLG.open&&e.key==='Escape')closeDialog(DLG.single)});
 
 /* ================== TASTO INDIETRO DEL TELEFONO ==================
    Da qualsiasi schermata (partita, menu, schede, fine partita) il tasto Indietro porta alla home.
@@ -1093,6 +1297,7 @@ function navCollapse(){
 }
 window.addEventListener('popstate',()=>{
   if(NAV.ignore>0){NAV.ignore--;return}
+  if(DLG.open){closeDialog(DLG.single);navPush();return}   /* Indietro chiude solo la finestra aperta */
   NAV.depth=Math.max(0,NAV.depth-1);
   $('sheet').classList.add('hidden');NAV.sheet=false;openMenu(false);
   if($('start').classList.contains('hidden'))showStart();else navCollapse();
@@ -1114,12 +1319,17 @@ function showStart(){
   boardReset();renderTrump();$('badge').style.display='none';$('deckPile').style.display='none';
   $('start').classList.remove('hidden');$('end').classList.add('hidden');syncStart();
   navCollapse();
+  levelCheck();
 }
 document.querySelectorAll('#lvSeg button').forEach(b=>b.onclick=()=>{S.level=b.dataset.l;saveS();syncStart();auInit();sfx.tap()});
 $('goNew').onclick=()=>{auInit();startNew(S.level)};
 $('goResume').onclick=()=>{auInit();resumeGame()};
 document.querySelectorAll('[data-career]').forEach(b=>b.onclick=()=>openSheet(b.dataset.career));
-$('endAgain').onclick=()=>{auInit();startNew(G?G.level:S.level)};
+$('endAgain').onclick=()=>{
+  auInit();const L=G&&G.league;
+  if(L){const next=(G.result==='w'&&L.stage+1<LEAGUE.length)?L.stage+1:L.stage;startNew(LEAGUE[next].level,{league:next})}
+  else startNew(G?G.level:S.level);
+};
 $('endMenu').onclick=()=>{showStart()};
 document.addEventListener('pointerdown',()=>auInit(),{once:true});
 
@@ -1130,6 +1340,7 @@ window.addEventListener('resize',()=>{
 
 /* ================== AVVIO ================== */
 if(gradLocked(S.grad)){S.grad='feltro';saveS()}
+if(backLocked(S.back)){S.back='back_default';saveS()}
 applyTheme();applySound();buildFan();
 document.querySelectorAll('.pot .pc').forEach(e=>{e.innerHTML=BACK_SVG});
 applyDur();
