@@ -49,6 +49,39 @@ button{font-family:inherit;color:inherit}
 .ib:active{background:rgba(0,0,0,.4)}
 .ib svg{width:22px;height:22px}
 
+/* Ottimizzazione intestazione per telefoni Android */
+#top>.ib{flex:0 0 40px;min-width:40px}
+.logo{min-width:0}
+.opp{box-sizing:border-box;max-width:100%}
+@media(max-width:480px){
+  #top{
+    height:76px;min-height:76px;box-sizing:border-box;
+    gap:4px;padding-left:10px;padding-right:max(8px,env(safe-area-inset-right));
+  }
+  .logo{font-size:22px;line-height:1;min-width:0}
+  .logo i{font-size:16px;margin:0 4px}
+  .opp{
+    display:flex;width:100%;max-width:100%;min-width:0;
+    gap:6px;margin-top:5px;padding:3px 8px 3px 4px;
+    border-radius:13px;justify-content:flex-start;
+  }
+  .opp .av{width:25px;height:25px}
+  .opp .nm{
+    flex:1 1 auto;min-width:0;white-space:normal;
+    overflow:visible;text-overflow:clip;overflow-wrap:anywhere;
+    line-height:1.15;font-size:13px;
+  }
+  .opp .lv,.opp .st{display:none}
+  #top>.ib{flex-basis:36px;min-width:36px;width:36px;height:36px}
+  #top>.ib svg{width:21px;height:21px}
+}
+@media(max-width:360px){
+  #top{gap:3px;padding-left:8px;padding-right:max(6px,env(safe-area-inset-right))}
+  #top>.ib{flex-basis:33px;min-width:33px;width:33px;height:33px}
+  .logo{font-size:20px}
+  .opp .nm{font-size:12px}
+}
+
 #board{position:relative;flex:1;overflow:hidden;min-height:0}
 #board.nt .card{transition:none!important}
 #wm{position:absolute;left:50%;top:60%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;
