@@ -33,12 +33,18 @@ button{font-family:inherit;color:inherit}
 
 #app{position:relative;z-index:1;max-width:560px;height:100vh;height:100dvh;margin:0 auto;display:flex;flex-direction:column;
   padding-top:env(safe-area-inset-top)}
-#top{height:56px;flex:none;display:flex;align-items:center;gap:6px;padding:0 10px 0 14px;position:relative;z-index:30}
+#top{height:64px;flex:none;display:flex;align-items:center;gap:6px;padding:0 10px 0 14px;position:relative;z-index:30}
 .logo{flex:1;font:700 25px/1 var(--serif);color:#fdf3d2;letter-spacing:.02em;text-shadow:0 2px 0 rgba(0,0,0,.3)}
 .logo i{font-style:normal;font-size:18px;margin:0 7px;color:#ff8a80;vertical-align:1px}
 .logo i.k{color:#e8e8ee}
-.logo small{display:block;margin-top:4px;font:600 calc(12.5px*var(--ts))/1.15 var(--sans);letter-spacing:.03em;color:#f3e7bf;opacity:.92;text-shadow:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:62vw}
-.logo small:empty{display:none}
+.opp{display:inline-flex;align-items:center;gap:8px;max-width:64vw;margin-top:5px;padding:3px 12px 3px 4px;border-radius:999px;color:#fdf3d2;text-shadow:none;letter-spacing:0;
+  background:linear-gradient(180deg,rgba(11,46,30,.95),rgba(4,24,15,.97));box-shadow:0 0 0 1.5px var(--gold) inset,0 3px 9px rgba(0,0,0,.4)}
+.opp:empty{display:none}
+.opp .av{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:15px;line-height:1;background:linear-gradient(#f8dc7e,#d3a02c);box-shadow:0 0 0 1px #8a6720 inset,0 1px 2px rgba(0,0,0,.4)}
+.opp .nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:700 calc(14px*var(--ts))/1.1 var(--serif);letter-spacing:.02em}
+.opp .lv{flex:none;padding:1px 6px;border-radius:999px;background:rgba(243,231,191,.16);font:700 calc(11px*var(--ts))/1.3 var(--sans);color:#f3e7bf}
+.opp .st{flex:none;font-size:calc(11px*var(--ts));letter-spacing:1px;color:#f6d36a}
+.opp .st i{font-style:normal;color:rgba(243,231,191,.28)}
 .ib{width:40px;height:40px;border-radius:50%;border:0;background:rgba(0,0,0,.25);color:#fff;display:grid;place-items:center;cursor:pointer}
 .ib:active{background:rgba(0,0,0,.4)}
 .ib svg{width:22px;height:22px}
@@ -122,7 +128,7 @@ button{font-family:inherit;color:inherit}
 #start .seg{background:rgba(0,0,0,.26)}
 #start .btn.ghost{color:#fdf3d2;border-color:rgba(253,243,210,.4)}
 
-#menu{position:absolute;z-index:58;right:8px;top:calc(56px + env(safe-area-inset-top));min-width:210px;border-radius:14px;overflow:hidden;
+#menu{position:absolute;z-index:58;right:8px;top:calc(64px + env(safe-area-inset-top));min-width:210px;border-radius:14px;overflow:hidden;
   background:var(--panel);color:var(--panel-ink);box-shadow:0 0 0 1.5px var(--gold) inset,0 14px 30px rgba(0,0,0,.4)}
 #menu button{display:block;width:100%;text-align:left;border:0;background:transparent;padding:14px 18px;font:600 calc(16px*var(--ts)) var(--sans);cursor:pointer;border-bottom:1px solid var(--line)}
 #menu button:last-child{border-bottom:0}
@@ -290,7 +296,7 @@ table.st td:first-child,table.st th:first-child{text-align:left}
 
 <div id="app">
   <header id="top">
-    <div class="logo"><div>Briscola<i>♥</i><i class="k">♠</i></div><small id="oppName"></small></div>
+    <div class="logo"><div>Briscola<i>♥</i><i class="k">♠</i></div><div id="oppName" class="opp"></div></div>
     <button class="ib" id="btnSound" aria-label="Suoni"></button>
     <button class="ib" id="btnNew" aria-label="Nuova partita"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg></button>
     <button class="ib" id="btnMenu" aria-label="Menu"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button>
@@ -619,15 +625,17 @@ function missionEvent(metric,amount){
 }
 /* ---------- campionato ---------- */
 const LEAGUE=[
- {name:'Nonno Gino',level:'facile',desc:'Gioca piano e si distrae spesso.',reward:100},
- {name:'Zia Rosa',level:'facile',desc:'Carte in mano e chiacchiere a non finire.',reward:150},
- {name:'Il Barista',level:'medio',desc:'Conosce ogni mossa del bar.',reward:200},
- {name:'Don Pasquale',level:'medio',desc:'Un avversario paziente e preciso.',reward:250},
- {name:'Il Capitano',level:'medio',desc:'Non regala mai una presa.',reward:300},
- {name:'La Contessa',level:'difficile',desc:'Conta le carte e non perdona.',reward:400},
- {name:'Il Maresciallo',level:'difficile',desc:'Gioca d’anticipo, mano dopo mano.',reward:500},
- {name:'Il Maestro Genovese',level:'difficile',desc:'Il campione: serve una partita quasi perfetta.',reward:800}
+ {name:'Nonno Gino',icon:'👴',level:'facile',desc:'Gioca piano e si distrae spesso.',reward:100},
+ {name:'Zia Rosa',icon:'👵',level:'facile',desc:'Carte in mano e chiacchiere a non finire.',reward:150},
+ {name:'Il Barista',icon:'🍷',level:'medio',desc:'Conosce ogni mossa del bar.',reward:200},
+ {name:'Don Pasquale',icon:'⛪',level:'medio',desc:'Un avversario paziente e preciso.',reward:250},
+ {name:'Il Capitano',icon:'⚓',level:'medio',desc:'Non regala mai una presa.',reward:300},
+ {name:'La Contessa',icon:'👑',level:'difficile',desc:'Conta le carte e non perdona.',reward:400},
+ {name:'Il Maresciallo',icon:'🎖️',level:'difficile',desc:'Gioca d’anticipo, mano dopo mano.',reward:500},
+ {name:'Il Maestro Genovese',icon:'🏆',level:'difficile',desc:'Il campione: serve una partita quasi perfetta.',reward:800}
 ];
+/* avversari delle partite normali: uno per livello (sono le prime tappe di ogni fascia del campionato) */
+const OPP_BY_LEVEL={facile:{name:'Nonno Gino',icon:'👴'},medio:{name:'Il Barista',icon:'🍷'},difficile:{name:'La Contessa',icon:'👑'}};
 const LEAGUE_WORLDS=[0,0,0,0,0,240,320,450];
 function leagueCleared(){return CAREER.league.cleared||0}
 function leagueResult(won){
@@ -933,9 +941,10 @@ function renderDeck(){
 }
 function renderOpp(){
   const el=$('oppName');if(!el)return;
-  if(!G){el.textContent='';return}
-  const L=G.league;
-  el.textContent=L?'Tappa '+(L.stage+1)+' · '+L.name+' · '+LEVELS[G.level]:'Avversario · '+LEVELS[G.level];
+  if(!G){el.textContent='';el.removeAttribute('aria-label');return}
+  const L=G.league,o=L?LEAGUE[L.stage]:OPP_BY_LEVEL[G.level],n={facile:1,medio:2,difficile:3}[G.level]||1;
+  el.innerHTML='<span class="av">'+o.icon+'</span><span class="nm">'+o.name+'</span>'+(L?'<span class="lv">'+(L.stage+1)+'/'+LEAGUE.length+'</span>':'')+'<span class="st">'+'★'.repeat(n)+'<i>'+'★'.repeat(3-n)+'</i></span>';
+  el.setAttribute('aria-label','Avversario: '+o.name+', livello '+LEVELS[G.level]+(L?', tappa '+(L.stage+1)+' di '+LEAGUE.length:''));
 }
 function renderTrump(){
   const c=$('trumpChip');
@@ -1214,7 +1223,7 @@ const SHEETS={
     ${sec('tap','Comandi','<ul class="feat"><li>Tocca una carta della tua mano per giocarla: quando tocca a te le carte si alzano.</li><li>I punti tuoi e dell’avversario si aggiornano a ogni mano.</li><li>Dal menu ⋮ puoi cambiare tema, sfondo e dimensione del testo.</li></ul>')}
     ${sec('levels','Livelli',`<div class="lvl"><div class="dot f">Facile</div><span>${LV_DESC.facile}</span></div>
       <div class="lvl"><div class="dot m">Medio</div><span>${LV_DESC.medio}</span></div>
-      <div class="lvl"><div class="dot d">Difficile</div><span>${LV_DESC.difficile}</span></div>`)}
+      <div class="lvl"><div class="dot d">Difficile</div><span>${LV_DESC.difficile}</span></div><p class="sub">Nelle partite normali sfidi Nonno Gino (Facile), Il Barista (Medio) o La Contessa (Difficile). Le stelle sulla targhetta in alto mostrano il livello.</p>`)}
     ${sec('trophy','Profilo, missioni e campionato',`<ul class="feat"><li>Ogni partita dà XP e monete: salendo di livello cambi titolo, da Novizio fino a Gran Maestro, e ricevi un bonus.</li><li>Ogni giorno ci sono tre missioni nuove e un premio giornaliero da riscattare.</li><li>Nel Campionato batti otto avversari in sequenza, sempre più forti.</li><li>Con le monete compri fondali del tavolo e dorsi delle carte nel Negozio.</li><li>Nelle Statistiche trovi vittorie, serie migliore e punti medi.</li></ul>`)}`},
   impostazioni:{title:'Impostazioni',html:()=>`
     <h4>Livello per le nuove partite</h4>
@@ -1253,7 +1262,7 @@ const SHEETS={
   info:{title:'Info e crediti',html:()=>{
     const tot=Object.values(STATS).reduce((n,x)=>n+x.w+x.l+x.d,0),won=Object.values(STATS).reduce((n,x)=>n+x.w,0);
     return `<div class="hero"><div class="mf">${[[9,0,-12],[39,48,0],[17,96,12]].map(c=>`<div style="left:${c[1]}px;transform:rotate(${c[2]}deg)">${faceSVG(c[0])}</div>`).join('')}</div>
-      <h2>Briscola by Miki</h2><p>La briscola contro il computer</p><span class="pill">Versione <span id="app-version">4.7</span></span></div>
+      <h2>Briscola by Miki</h2><p>La briscola contro il computer</p><span class="pill">Versione <span id="app-version">4.8</span></span></div>
     ${sec('cards','Cosa include','<ul class="feat"><li>Partita singola a due giocatori contro il computer</li><li>Tre livelli: Facile, Medio e Difficile</li><li>Punteggi in tempo reale e suoni delle carte</li><li>Missioni giornaliere, campionato e statistiche</li><li>Profilo con livelli, titoli, monete e trofei</li><li>Negozio di fondali e dorsi</li><li>Temi, sfondi del tavolo e testo ingrandibile</li></ul>')}
     ${sec('levels','Le tue partite',`<p>Partite giocate: <b>${tot}</b> · vinte: <b>${won}</b>.</p>`)}
     ${sec('info','Crediti','<p>Ideata e voluta da <b>Miki</b>, sviluppata con Claude di Anthropic.</p><p>Carte, tavolo e suoni sono disegnati e generati nel codice: nessuna immagine o file audio esterno.</p>')}
