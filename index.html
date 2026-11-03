@@ -44,7 +44,7 @@ button{font-family:inherit;color:inherit}
 .opp .nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:700 calc(14px*var(--ts))/1.1 var(--serif);letter-spacing:.02em}
 .opp .lv{flex:none;padding:1px 6px;border-radius:999px;background:rgba(243,231,191,.16);font:700 calc(11px*var(--ts))/1.3 var(--sans);color:#f3e7bf}
 .opp .st{flex:none;font-size:calc(11px*var(--ts));letter-spacing:1px;color:#f6d36a}
-.opp .st i{font-style:normal;color:rgba(243,231,191,.28)}
+.opp .st i{font-style:normal;font-size:inherit;margin:0;vertical-align:baseline;color:rgba(243,231,191,.28)}
 .ib{width:40px;height:40px;border-radius:50%;border:0;background:rgba(0,0,0,.25);color:#fff;display:grid;place-items:center;cursor:pointer}
 .ib:active{background:rgba(0,0,0,.4)}
 .ib svg{width:22px;height:22px}
@@ -71,9 +71,13 @@ button{font-family:inherit;color:inherit}
     overflow:visible;text-overflow:clip;overflow-wrap:anywhere;
     line-height:1.15;font-size:13px;
   }
-  .opp .lv,.opp .st{display:none}
+  .opp .st{display:inline-block;margin-left:auto;font-size:11px;line-height:1;align-self:center}
+  .opp .lv{display:none}
   #top>.ib{flex-basis:36px;min-width:36px;width:36px;height:36px}
   #top>.ib svg{width:21px;height:21px}
+}
+@media(min-width:390px) and (max-width:480px){
+  .opp .lv{display:inline-block}
 }
 @media(max-width:360px){
   #top{gap:3px;padding-left:8px;padding-right:max(6px,env(safe-area-inset-right))}
@@ -1046,7 +1050,6 @@ async function runGame(resume){
       for(let k=0;k<3;k++){drawCard(0);await wait(150);drawCard(1);await wait(150)}
       await wait(250);G.briShown=true;sfx.flip();render();await wait(650);
       say(G.lead===0?'Inizi tu':'Inizia l’avversario');await wait(800);
-      if(G.league)rewardToast('Tappa '+(G.league.stage+1)+' · '+G.league.name);
     }
     while(true){
       saveGame();
@@ -1295,7 +1298,7 @@ const SHEETS={
   info:{title:'Info e crediti',html:()=>{
     const tot=Object.values(STATS).reduce((n,x)=>n+x.w+x.l+x.d,0),won=Object.values(STATS).reduce((n,x)=>n+x.w,0);
     return `<div class="hero"><div class="mf">${[[9,0,-12],[39,48,0],[17,96,12]].map(c=>`<div style="left:${c[1]}px;transform:rotate(${c[2]}deg)">${faceSVG(c[0])}</div>`).join('')}</div>
-      <h2>Briscola by Miki</h2><p>La briscola contro il computer</p><span class="pill">Versione <span id="app-version">4.8</span></span></div>
+      <h2>Briscola by Miki</h2><p>La briscola contro il computer</p><span class="pill">Versione <span id="app-version">4.9</span></span></div>
     ${sec('cards','Cosa include','<ul class="feat"><li>Partita singola a due giocatori contro il computer</li><li>Tre livelli: Facile, Medio e Difficile</li><li>Punteggi in tempo reale e suoni delle carte</li><li>Missioni giornaliere, campionato e statistiche</li><li>Profilo con livelli, titoli, monete e trofei</li><li>Negozio di fondali e dorsi</li><li>Temi, sfondi del tavolo e testo ingrandibile</li></ul>')}
     ${sec('levels','Le tue partite',`<p>Partite giocate: <b>${tot}</b> · vinte: <b>${won}</b>.</p>`)}
     ${sec('info','Crediti','<p>Ideata e voluta da <b>Miki</b>, sviluppata con Claude di Anthropic.</p><p>Carte, tavolo e suoni sono disegnati e generati nel codice: nessuna immagine o file audio esterno.</p>')}
