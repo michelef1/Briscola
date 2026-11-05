@@ -414,21 +414,42 @@ const cardName=c=>RANK_NAME[rankOf(c)]+' di '+SUIT_NAMES[suitOf(c)].toLowerCase(
 /* il seguace vince se: stesso seme e valore piu' alto, oppure briscola su seme diverso */
 function followerWins(L,F,T){const sl=suitOf(L),sf=suitOf(F);if(sf===sl)return rankOf(F)>rankOf(L);return sf===T}
 const minBy=(a,f)=>{let b=a[0],bv=f(b);for(let i=1;i<a.length;i++){const v=f(a[i]);if(v<bv){b=a[i];bv=v}}return b};
+const maxBy=(a,f)=>{let b=a[0],bv=f(b);for(let i=1;i<a.length;i++){const v=f(a[i]);if(v>bv){b=a[i];bv=v}}return b};
 const cost=(c,T)=>(suitOf(c)===T?1000:0)+ptsOf(c)*10+rankOf(c);
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;const t=a[i];a[i]=a[j];a[j]=t}return a}
 const rm=(a,c)=>{const i=a.indexOf(c);if(i>=0)a.splice(i,1)};
 
-/* Giocatore "medio": regole pratiche */
+/* Valutazione tattica delle carte: evita di sprecare carichi e briscole.
+   Il valore misura quanto conviene conservare una carta per le prese successive. */
+function keepPower(c,T){
+  const r=rankOf(c);
+  return r*1.15+(r>=8?7:0)+(suitOf(c)===T?19:0);
+}
+function discardCost(c,T){
+  return ptsOf(c)*4.2+keepPower(c,T);
+}
+function leadCost(c,T){
+  // In apertura privilegia carte basse senza punti e conserva i carichi.
+  return discardCost(c,T)+(suitOf(c)===T?5:0);
+}
+/* Giocatore medio/difficile: valuta sia i punti della presa sia il valore
+   della carta che deve spendere. */
 function heurPick(hand,t,T){
-  if(t===null||t===undefined)return minBy(hand,c=>cost(c,T));
+  if(!hand.length)return null;
+  if(t===null||t===undefined)return minBy(hand,c=>leadCost(c,T));
   const wins=hand.filter(c=>followerWins(t,c,T));
-  const tp=ptsOf(t);
-  if(wins.length){
-    const nt=wins.filter(c=>suitOf(c)!==T);
-    if(nt.length)return minBy(nt,c=>rankOf(c));
-    if(tp>=4)return minBy(wins,c=>rankOf(c));
-  }
-  return minBy(hand,c=>cost(c,T));
+  if(!wins.length)return minBy(hand,c=>discardCost(c,T));
+  const loses=hand.filter(c=>!followerWins(t,c,T));
+  const bestWin=minBy(wins,c=>keepPower(c,T));
+  if(!loses.length)return bestWin;
+  const bestLose=minBy(loses,c=>discardCost(c,T));
+  const tablePts=ptsOf(t);
+  // Se la presa vale poco, non usare una carta forte solo per vincere.
+  // Quando invece la presa contiene punti, spendi la carta vincente meno preziosa.
+  const swing=2*(tablePts+ptsOf(bestWin)+ptsOf(bestLose));
+  const extra=keepPower(bestWin)-keepPower(bestLose);
+  if(swing>=extra+3)return bestWin;
+  return bestLose;
 }
 function resolveSim(s,lead,cL,cF){
   const f=1-lead,w=followerWins(cL,cF,s.T)?f:lead;
@@ -469,7 +490,7 @@ function buildView(g,side){
   return{
     hand:g.hands[side].slice(),tbl:g.tbl[opp],T:g.T,B:g.B,
     bInDeck:g.deck.length>0,
-    oppKnown:(g.bOwner===opp&&g.hands[opp].includes(g.B))?[g.B]:[],
+    oppKnown:(S.openCards&&!g.league)?g.hands[opp].slice():((g.bOwner===opp&&g.hands[opp].includes(g.B))?[g.B]:[]),
     played:g.played.slice(),myP:g.pts[side],opP:g.pts[opp],
     oppSize:g.hands[opp].length,iLead:g.tbl[opp]===null
   };
@@ -480,6 +501,9 @@ function pimc(v,worlds){
   if(cands.length===1)return cands[0];
   const used=new Set(v.hand);v.played.forEach(c=>used.add(c));
   if(v.tbl!==null)used.add(v.tbl);
+  // Le carte note dell'avversario (modalità Carte scoperte o briscola pescata)
+  // non devono essere ricampionate anche come carte ignote.
+  (v.oppKnown||[]).forEach(c=>used.add(c));
   used.add(v.B);
   const U=[];for(let i=0;i<40;i++)if(!used.has(i))U.push(i);
   const need=v.oppSize-v.oppKnown.length,restN=U.length-need;
@@ -508,7 +532,7 @@ function pimc(v,worlds){
         if(nd.length)nh[1-w].push(nd.pop());
         val=(w===0?pts:-pts)+solve(nh[0],nh[1],nd,w,v.T);
       }
-      if(val>bestV||(val===bestV&&cost(c,v.T)<cost(bestC,v.T))){bestV=val;bestC=c}
+      if(val>bestV||(val===bestV&&(ptsOf(c)>ptsOf(bestC)||(ptsOf(c)===ptsOf(bestC)&&rankOf(c)>rankOf(bestC))))){bestV=val;bestC=c}
     }
     return bestC;
   }
@@ -525,12 +549,13 @@ function pimc(v,worlds){
       else{s.lead=resolveSim(s,1,v.tbl,c)}
       playout(s);
       const tot=v.myP+s.p[0];
-      sc[ci]+=(tot>60?1:(tot===60?.5:0))+(tot-60)/2400;
+      const result=(tot>60?1:(tot===60?.5:0))+(tot-60)/2400;
+      sc[ci]+=result;
     }
   }
   let bi=0;
   for(let i=1;i<cands.length;i++){
-    if(sc[i]>sc[bi]+1e-9||(Math.abs(sc[i]-sc[bi])<=1e-9&&cost(cands[i],v.T)<cost(cands[bi],v.T)))bi=i;
+    if(sc[i]>sc[bi]+1e-9||(Math.abs(sc[i]-sc[bi])<=1e-9&&(ptsOf(cands[i])>ptsOf(cands[bi])||(ptsOf(cands[i])===ptsOf(cands[bi])&&rankOf(cands[i])>rankOf(cands[bi])))))bi=i;
   }
   return cands[bi];
 }
@@ -544,7 +569,7 @@ const LEVELS={facile:'Facile',medio:'Medio',difficile:'Difficile'};
 const LV_DESC={
   facile:'L’avversario gioca spesso a caso: ideale per imparare.',
   medio:'Sceglie con criterio: prende le mani con punti e risparmia le briscole.',
-  difficile:'Conta le carte uscite e simula la partita: non perdona gli errori.'};
+  difficile:'Conta le carte uscite e simula più scenari per scegliere le mosse migliori.'};
 let S=Object.assign({level:'medio',sound:true,vol:0.7,spd:2,back:'back_default',vibe:true,themeMode:'auto',grad:'feltro',ts:1,reduce:false},LS.get('briscola2_settings',{}));
 let STATS=LS.get('briscola2_stats',{facile:{w:0,l:0,d:0},medio:{w:0,l:0,d:0},difficile:{w:0,l:0,d:0}});
 const saveS=()=>LS.set('briscola2_settings',S);
@@ -937,7 +962,7 @@ function posFor(id){
   if(G.tbl[0]===id)return Object.assign(trickPos(0),{up:true,z:ZMAP[id]||50});
   if(G.tbl[1]===id)return Object.assign(trickPos(1),{up:true,z:ZMAP[id]||50});
   let k=G.slots[0].indexOf(id);if(k>=0)return Object.assign(handPos(0,id),{up:true,mine:true});
-  k=G.slots[1].indexOf(id);if(k>=0)return Object.assign(handPos(1,id),{up:false});
+  k=G.slots[1].indexOf(id);if(k>=0)return Object.assign(handPos(1,id),{up:!!(S.openCards&&!G.league)});
   if(id===G.B&&G.deck.length&&G.deck[0]===G.B){
     return G.briShown?Object.assign(briPos(),{up:true,z:3}):Object.assign(deckPos(),{up:false,z:3});
   }
@@ -1086,12 +1111,130 @@ async function playerPlay(){
   G.phase='cpu';setTurn(-1);
   playCard(0,id);await wait(420);
 }
+/* Regole di spesa carte AI v5:
+   - se deve vincere, usa prima una carta del seme giocato che basta a vincere;
+   - se deve tagliare con briscola, usa la briscola vincente più bassa;
+   - se deve perdere, sacrifica prima carte non di briscola senza punti,
+     poi figure non di briscola; protegge 3 e Asso, soprattutto di briscola. */
+function v5BestDiscard(hand,T){
+  if(!hand.length)return null;
+  const nonTrump=hand.filter(c=>suitOf(c)!==T);
+  const zero=nonTrump.filter(c=>ptsOf(c)===0);
+  if(zero.length)return minBy(zero,c=>keepPower(c,T));
+  const nonTrumpFaces=nonTrump.filter(c=>rankOf(c)>=5&&rankOf(c)<=7);
+  if(nonTrumpFaces.length)return minBy(nonTrumpFaces,c=>discardCost(c,T));
+  // Se restano solo carichi non di briscola e figure di briscola,
+  // sacrifica prima una figura di briscola per proteggere Asso/3 non trump.
+  const trumpFaces=hand.filter(c=>suitOf(c)===T&&rankOf(c)>=5&&rankOf(c)<=7);
+  if(trumpFaces.length)return minBy(trumpFaces,c=>discardCost(c,T));
+  const nonTrumpLoads=nonTrump.filter(c=>rankOf(c)>=8);
+  if(nonTrumpLoads.length)return minBy(nonTrumpLoads,c=>discardCost(c,T));
+  // Solo se non esiste altro: scarica il carico meno prezioso, evitando l'Asso.
+  const trumpThree=hand.filter(c=>suitOf(c)===T&&rankOf(c)===8);
+  if(trumpThree.length)return minBy(trumpThree,c=>discardCost(c,T));
+  return minBy(hand,c=>discardCost(c,T));
+}
+function v5BestWinner(wins,t,T){
+  if(!wins.length)return null;
+  // Sullo stesso seme prende con la carta che porta più punti: meglio
+  // spendere il 3 (10 punti) che il Re (4), se entrambi vincono.
+  const sameSuit=wins.filter(c=>suitOf(c)===suitOf(t));
+  if(sameSuit.length)return maxBy(sameSuit,c=>ptsOf(c)*100+rankOf(c));
+  // Se deve tagliare, usa la briscola vincente più bassa sufficiente.
+  const trumps=wins.filter(c=>suitOf(c)===T);
+  if(trumps.length)return minBy(trumps,c=>rankOf(c));
+  return maxBy(wins,c=>ptsOf(c)*100+rankOf(c));
+}
+// Asso e 3 di briscola sono carte protette: si spendono per prendere
+// un Asso/3 avversario, oppure per non perdere un proprio Asso/3 non di briscola.
+function v5IsTrumpLoad(c,T){return c!==null&&c!==undefined&&suitOf(c)===T&&rankOf(c)>=8;}
+function v5MaySpendTrumpLoad(win,t,discard,T){
+  if(!v5IsTrumpLoad(win,T))return true;
+  if(rankOf(t)>=8)return true; // prende un Asso o un 3 sul tavolo
+  return discard!==null&&discard!==undefined&&suitOf(discard)!==T&&rankOf(discard)>=8;
+}
+function v8ChooseResponse(hand,t,T){
+  if(!hand.length)return null;
+  const wins=hand.filter(c=>followerWins(t,c,T));
+  const loses=hand.filter(c=>!followerWins(t,c,T));
+  const bestLose=loses.length?v5BestDiscard(loses,T):null;
+  const sameSuitWins=wins.filter(c=>suitOf(c)===suitOf(t));
+
+  // Carta avversaria senza punti:
+  // - se gioca un seme normale e posso vincere con una mia carta dello stesso
+  //   seme che vale punti, la uso per non regalare quei punti;
+  // - se invece la carta è di briscola, non taglio una presa vuota: scarto
+  //   prima una carta senza punti, anche se potrei vincere con una briscola.
+  if(ptsOf(t)===0){
+    if(suitOf(t)!==T){
+      const valuableSameSuit=sameSuitWins.filter(c=>ptsOf(c)>0);
+      if(valuableSameSuit.length)
+        return maxBy(valuableSameSuit,c=>ptsOf(c)*100+rankOf(c));
+    }
+    if(bestLose!==null)return bestLose;
+    // Se non posso perdere, evita comunque Asso/3 di briscola quando
+    // esiste una carta vincente meno preziosa.
+    const safeWins=wins.filter(c=>!v5IsTrumpLoad(c,T));
+    if(safeWins.length)return minBy(safeWins,c=>keepPower(c,T));
+    return wins.length?v5BestWinner(wins,t,T):v5BestDiscard(hand,T);
+  }
+
+  // Con punti sul tavolo: prendi sullo stesso seme se possibile, scegliendo
+  // la carta che conserva meno punti all'avversario (3 prima di Re, ecc.).
+  if(sameSuitWins.length)
+    return maxBy(sameSuitWins,c=>ptsOf(c)*100+rankOf(c));
+
+  // Se tagliare permette di prendere punti, usa la briscola vincente più
+  // bassa; ma non sacrificare Asso/3 di briscola per prese povere.
+  if(wins.length){
+    const bestWin=v5BestWinner(wins,t,T);
+    if(v5IsTrumpLoad(bestWin,T)){
+      const canSaveLoad=bestLose!==null && suitOf(bestLose)!==T && rankOf(bestLose)>=8;
+      if(rankOf(t)<8 && !canSaveLoad)return bestLose!==null?bestLose:bestWin;
+    }
+    return bestWin;
+  }
+  return bestLose!==null?bestLose:v5BestDiscard(hand,T);
+}
+function v8OpeningPick(hand,T){
+  if(!hand.length)return null;
+  // In uscita si parte da una carta non di briscola senza punti.
+  const plain=hand.filter(c=>suitOf(c)!==T&&ptsOf(c)===0);
+  if(plain.length)return minBy(plain,c=>keepPower(c,T));
+
+  // Se non c'è uno scarto neutro, ma abbiamo carichi non di briscola e
+  // figure di briscola, sacrifica la figura di briscola per non esporre
+  // subito l'Asso/3 non di briscola.
+  const trumpFaces=hand.filter(c=>suitOf(c)===T&&rankOf(c)>=5&&rankOf(c)<=7);
+  const nonTrumpLoads=hand.filter(c=>suitOf(c)!==T&&rankOf(c)>=8);
+  if(trumpFaces.length&&nonTrumpLoads.length&&!hand.some(c=>suitOf(c)!==T&&rankOf(c)>=5&&rankOf(c)<=7))
+    return minBy(trumpFaces,c=>discardCost(c,T));
+
+  // Prima di uscire con una briscola, scarica una figura non di briscola:
+  // conserva la briscola, soprattutto se è l'unica disponibile.
+  const nonTrumpFaces=hand.filter(c=>suitOf(c)!==T&&rankOf(c)>=5&&rankOf(c)<=7);
+  if(nonTrumpFaces.length)return minBy(nonTrumpFaces,c=>discardCost(c,T));
+
+  // Non uscire gratuitamente con Asso o 3 di briscola se c'è una briscola
+  // più bassa da rischiare.
+  const lowTrumps=hand.filter(c=>suitOf(c)===T&&rankOf(c)<=7);
+  if(lowTrumps.length)return minBy(lowTrumps,c=>rankOf(c));
+  const nonTrumpNonLoads=hand.filter(c=>suitOf(c)!==T&&rankOf(c)<8);
+  if(nonTrumpNonLoads.length)return minBy(nonTrumpNonLoads,c=>discardCost(c,T));
+  return minBy(hand,c=>discardCost(c,T));
+}
+function expertPick(hand,t,T){
+  if(!hand.length)return null;
+  if(t===null||t===undefined)return v8OpeningPick(hand,T);
+  return v8ChooseResponse(hand,t,T);
+}
 function cpuChoose(){
   const hand=G.hands[1];if(hand.length===1)return hand[0];
-  const t=G.tbl[0];
-  if(G.level==='facile')return Math.random()<.72?hand[(Math.random()*hand.length)|0]:heurPick(hand,t,G.T);
-  if(G.level==='medio')return heurPick(hand,t,G.T);
-  return pimc(buildView(G,1),G.worlds||320);
+  const t=G.tbl[0],T=G.T;
+  if(t===null||t===undefined)return expertPick(hand,null,T);
+  // Le regole di risposta sono vincolanti anche a Difficile: non deve
+  // trasformare uno scarto gratuito in un taglio inutile.
+  return v8ChooseResponse(hand,t,T);
 }
 async function cpuPlay(){
   setTurn(1);say(G.lead===1?'Tocca all’avversario…':'L’avversario risponde…');
@@ -1256,7 +1399,7 @@ const SHEETS={
       <li>Chi vince raccoglie le due carte, pesca per primo e gioca per primo la mano dopo.</li>
       <li>L’ultima carta del mazzo è la briscola scoperta: la prende chi pesca per ultimo.</li>
       <li>Si finisce quando sono finite tutte le carte.</li></ol>`)}
-    ${sec('tap','Comandi','<ul class="feat"><li>Tocca una carta della tua mano per giocarla: quando tocca a te le carte si alzano.</li><li>I punti tuoi e dell’avversario si aggiornano a ogni mano.</li><li>Dal menu ⋮ puoi cambiare tema, sfondo e dimensione del testo.</li></ul>')}
+    ${sec('tap','Comandi','<ul class="feat"><li>Tocca una carta della tua mano per giocarla: quando tocca a te le carte si alzano.</li><li>I punti tuoi e dell’avversario si aggiornano a ogni mano.</li><li>In Impostazioni puoi attivare <b>Carte scoperte</b> per vedere la mano dell’avversario nelle partite amichevoli.</li><li>Dal menu ⋮ puoi cambiare tema, sfondo e dimensione del testo.</li></ul>')}
     ${sec('levels','Livelli',`<div class="lvl"><div class="dot f">Facile</div><span>${LV_DESC.facile}</span></div>
       <div class="lvl"><div class="dot m">Medio</div><span>${LV_DESC.medio}</span></div>
       <div class="lvl"><div class="dot d">Difficile</div><span>${LV_DESC.difficile}</span></div><p class="sub">Nelle partite normali sfidi Nonno Gino (Facile), Il Barista (Medio) o La Contessa (Difficile). Le stelle sulla targhetta in alto mostrano il livello.</p>`)}
@@ -1265,6 +1408,8 @@ const SHEETS={
     <h4>Livello per le nuove partite</h4>
     <div class="seg" id="setLv">${Object.keys(LEVELS).map(k=>`<button data-l="${k}" class="${S.level===k?'on':''}">${LEVELS[k]}</button>`).join('')}</div>
     <p class="sub">La partita in corso continua con il livello con cui è iniziata.</p>
+    <h4>Modalità amichevole</h4>
+    <div class="row"><div style="flex:1;min-width:0"><b>Carte scoperte</b><p class="sub" style="margin:3px 0 0">Mostra le carte che l’avversario ha in mano. Disponibile nelle partite amichevoli, non nel Campionato.</p></div><button class="sw ${S.openCards?'on':''}" id="setOpenCards" role="switch" aria-checked="${!!S.openCards}"><i></i></button></div>
     <h4>Tema</h4>
     <div class="seg" id="setMode">${[['auto','Automatico'],['light','Chiaro'],['dark','Scuro']].map(m=>`<button data-m="${m[0]}" class="${S.themeMode===m[0]?'on':''}">${m[1]}</button>`).join('')}</div>
     <h4>Sfondo del tavolo</h4>
@@ -1284,6 +1429,7 @@ const SHEETS={
     <button class="btn ghost" id="resetStats">Azzera statistiche</button>`,
    bind:()=>{
     $('setLv').querySelectorAll('button').forEach(b=>b.onclick=()=>{S.level=b.dataset.l;saveS();$('setLv').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b))});
+    $('setOpenCards').onclick=()=>{S.openCards=!S.openCards;saveS();$('setOpenCards').classList.toggle('on',S.openCards);$('setOpenCards').setAttribute('aria-checked',S.openCards);if(G&&!G.league)render()};
     $('setSound').onclick=()=>{auInit();S.sound=!S.sound;saveS();applySound();$('setSound').classList.toggle('on',S.sound);$('setSound').setAttribute('aria-checked',S.sound);if(S.sound)sfx.tap()};
     $('setVol').oninput=e=>{S.vol=e.target.value/100;saveS();if(AU.master)AU.master.gain.value=S.vol};
     $('setVol').onchange=()=>{auInit();sfx.play()};
