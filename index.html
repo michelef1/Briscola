@@ -1207,9 +1207,34 @@ function v8ChooseResponse(hand,t,T){
   }
   return bestLose!==null?bestLose:v5BestDiscard(hand,T);
 }
+/* Memoria strategica: G.played contiene tutte le carte già uscite e G.pts
+   contiene il punteggio aggiornato dei due giocatori. I carichi sono Asso e 3. */
+function v15LoadMemory(hand){
+  const playedLoads=(G.played||[]).filter(c=>rankOf(c)>=8);
+  const handLoads=hand.filter(c=>rankOf(c)>=8);
+  const scoreAI=G.pts?.[1]||0, scoreUser=G.pts?.[0]||0;
+  return {playedLoads,handLoads,scoreAI,scoreUser,scoreDiff:scoreAI-scoreUser};
+}
+function v15OpeningByLoadSuit(hand,T){
+  const mem=v15LoadMemory(hand);
+  // Prima cerco un'uscita dello stesso seme di un carico che ho ancora in mano.
+  // Non gioco il carico stesso: cerco una carta più bassa dello stesso seme.
+  const ownSuits=[...new Set(mem.handLoads.map(suitOf))];
+  const ownSuitCards=hand.filter(c=>ownSuits.includes(suitOf(c))&&rankOf(c)<8);
+  if(ownSuitCards.length)return minBy(ownSuitCards,c=>discardCost(c,T));
+  // In alternativa uso il seme di un Asso/3 già uscito: il conteggio delle
+  // carte uscite è completo perché ogni presa aggiunge entrambe le carte a G.played.
+  const outSuits=[...new Set(mem.playedLoads.map(suitOf))];
+  const outSuitCards=hand.filter(c=>outSuits.includes(suitOf(c))&&rankOf(c)<8);
+  if(outSuitCards.length)return minBy(outSuitCards,c=>discardCost(c,T));
+  return null;
+}
 function v8OpeningPick(hand,T){
   if(!hand.length)return null;
-  // In uscita si parte da una carta non di briscola senza punti.
+  // Prima applica la nuova strategia di uscita legata ai semi dei carichi.
+  const loadSuitLead=v15OpeningByLoadSuit(hand,T);
+  if(loadSuitLead!==null)return loadSuitLead;
+  // In mancanza di un seme utile, si parte da una carta non di briscola senza punti.
   const plain=hand.filter(c=>suitOf(c)!==T&&ptsOf(c)===0);
   if(plain.length)return minBy(plain,c=>keepPower(c,T));
 
@@ -1455,10 +1480,10 @@ const SHEETS={
   info:{title:'Info e crediti',html:()=>{
     const tot=Object.values(STATS).reduce((n,x)=>n+x.w+x.l+x.d,0),won=Object.values(STATS).reduce((n,x)=>n+x.w,0);
     return `<div class="hero"><div class="mf">${[[9,0,-12],[39,48,0],[17,96,12]].map(c=>`<div style="left:${c[1]}px;transform:rotate(${c[2]}deg)">${faceSVG(c[0])}</div>`).join('')}</div>
-      <h2>Briscola by Miki</h2><p>La briscola contro il computer</p><span class="pill">Versione <span id="app-version">4.9</span></span></div>
+      <h2>Briscola by Miki</h2><p>La briscola contro il computer</p><span class="pill">Versione <span id="app-version">5.0</span></span></div>
     ${sec('cards','Cosa include','<ul class="feat"><li>Partita singola a due giocatori contro il computer</li><li>Tre livelli: Facile, Medio e Difficile</li><li>Punteggi in tempo reale e suoni delle carte</li><li>Missioni giornaliere, campionato e statistiche</li><li>Profilo con livelli, titoli, monete e trofei</li><li>Negozio di fondali e dorsi</li><li>Temi, sfondi del tavolo e testo ingrandibile</li></ul>')}
     ${sec('levels','Le tue partite',`<p>Partite giocate: <b>${tot}</b> · vinte: <b>${won}</b>.</p>`)}
-    ${sec('info','Crediti','<p>Ideata e voluta da <b>Miki</b>, sviluppata con Claude di Anthropic.</p><p>Carte, tavolo e suoni sono disegnati e generati nel codice: nessuna immagine o file audio esterno.</p>')}
+    ${sec('info','Crediti','<p>Ideata e voluta da <b>Miki</b>, sviluppata con il supporto di <b>Claude (Anthropic)</b> e <b>ChatGPT (OpenAI)</b>.</p><p>Carte, tavolo e suoni sono disegnati e generati nel codice: nessuna immagine o file audio esterno.</p>')}
     ${sec('shield','I tuoi dati','<p>Impostazioni, statistiche e partita in corso restano solo su questo dispositivo.</p>')}`}}
 };
 function openSheet(k){
