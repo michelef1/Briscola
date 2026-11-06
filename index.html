@@ -1159,40 +1159,51 @@ function v8ChooseResponse(hand,t,T){
   const loses=hand.filter(c=>!followerWins(t,c,T));
   const bestLose=loses.length?v5BestDiscard(loses,T):null;
   const sameSuitWins=wins.filter(c=>suitOf(c)===suitOf(t));
+  const tablePoints=ptsOf(t);
 
-  // Carta avversaria senza punti:
-  // - se gioca un seme normale e posso vincere con una mia carta dello stesso
-  //   seme che vale punti, la uso per non regalare quei punti;
-  // - se invece la carta è di briscola, non taglio una presa vuota: scarto
-  //   prima una carta senza punti, anche se potrei vincere con una briscola.
-  if(ptsOf(t)===0){
-    if(suitOf(t)!==T){
-      const valuableSameSuit=sameSuitWins.filter(c=>ptsOf(c)>0);
-      if(valuableSameSuit.length)
-        return maxBy(valuableSameSuit,c=>ptsOf(c)*100+rankOf(c));
+  // 1) Se posso prendere sul seme giocato, preferisco la carta che incassa
+  // più punti: per esempio il 3 (10) prima del Re (4), senza tagliare.
+  if(suitOf(t)!==T && sameSuitWins.length){
+    return maxBy(sameSuitWins,c=>ptsOf(c)*100+rankOf(c));
+  }
+
+  // 2) Contro una briscola avversaria: non regalare un proprio Asso/3
+  // non di briscola se posso batterla con una briscola. Uso la briscola
+  // vincente meno costosa, privilegiando le figure rispetto ai carichi.
+  if(suitOf(t)===T){
+    const ownNonTrumpLoads=loses.filter(c=>suitOf(c)!==T&&rankOf(c)>=8);
+    if(ownNonTrumpLoads.length && wins.length){
+      const cheapTrumpWins=wins.filter(c=>suitOf(c)===T && rankOf(c)<8);
+      if(cheapTrumpWins.length)return minBy(cheapTrumpWins,c=>rankOf(c));
+      // Se l'unica briscola che salva il carico è Asso/3, la si può spendere:
+      // meglio salvare 10/11 punti che perdere il carico non di briscola.
+      const trumpWins=wins.filter(c=>suitOf(c)===T);
+      if(trumpWins.length)return minBy(trumpWins,c=>rankOf(c));
     }
+  }
+
+  // 3) Una presa vuota non giustifica mai l'Asso/3 di briscola.
+  // Se esiste uno scarto senza punti, lo uso. Se devo proteggere un carico
+  // non di briscola contro una carta bassa, valgono le eccezioni sopra.
+  if(tablePoints===0){
     if(bestLose!==null)return bestLose;
-    // Se non posso perdere, evita comunque Asso/3 di briscola quando
-    // esiste una carta vincente meno preziosa.
     const safeWins=wins.filter(c=>!v5IsTrumpLoad(c,T));
     if(safeWins.length)return minBy(safeWins,c=>keepPower(c,T));
     return wins.length?v5BestWinner(wins,t,T):v5BestDiscard(hand,T);
   }
 
-  // Con punti sul tavolo: prendi sullo stesso seme se possibile, scegliendo
-  // la carta che conserva meno punti all'avversario (3 prima di Re, ecc.).
-  if(sameSuitWins.length)
-    return maxBy(sameSuitWins,c=>ptsOf(c)*100+rankOf(c));
-
-  // Se tagliare permette di prendere punti, usa la briscola vincente più
-  // bassa; ma non sacrificare Asso/3 di briscola per prese povere.
+  // 4) Quando la carta avversaria porta punti e non posso prendere sul seme,
+  // taglio con la briscola vincente meno costosa. Asso/3 di briscola sono
+  // riservati normalmente ad Asso/3 avversari; si usano prima le figure.
   if(wins.length){
-    const bestWin=v5BestWinner(wins,t,T);
-    if(v5IsTrumpLoad(bestWin,T)){
-      const canSaveLoad=bestLose!==null && suitOf(bestLose)!==T && rankOf(bestLose)>=8;
-      if(rankOf(t)<8 && !canSaveLoad)return bestLose!==null?bestLose:bestWin;
-    }
-    return bestWin;
+    const cheapTrumpWins=wins.filter(c=>suitOf(c)===T && rankOf(c)<8);
+    if(cheapTrumpWins.length)return minBy(cheapTrumpWins,c=>rankOf(c));
+    const nonTrumpWins=wins.filter(c=>suitOf(c)!==T);
+    if(nonTrumpWins.length)return v5BestWinner(nonTrumpWins,t,T);
+    const trumpLoads=wins.filter(c=>suitOf(c)===T && rankOf(c)>=8);
+    if(trumpLoads.length && tablePoints>=10)return minBy(trumpLoads,c=>rankOf(c));
+    if(bestLose!==null)return bestLose;
+    return minBy(trumpLoads.length?trumpLoads:wins,c=>keepPower(c,T));
   }
   return bestLose!==null?bestLose:v5BestDiscard(hand,T);
 }
