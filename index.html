@@ -149,7 +149,7 @@ button{font-family:inherit;color:inherit}
 .btn:active{transform:translateY(2px);box-shadow:0 1px 0 #a67c1b}
 .btn.ghost{background:transparent;color:inherit;border:1.5px solid var(--line);box-shadow:none}
 .seg{display:flex;gap:3px;padding:3px;border-radius:13px;background:rgba(127,127,127,.18);margin-top:12px}
-.seg button{flex:1;border:0;background:transparent;padding:10px 4px;border-radius:10px;font:600 calc(15px*var(--ts)) var(--sans);cursor:pointer}
+.seg button{flex:1;min-width:0;border:0;background:transparent;padding:10px 4px;border-radius:10px;font:600 calc(15px*var(--ts)) var(--sans);cursor:pointer}
 .seg button.on{background:var(--gold);color:#2a1d00}
 
 #start{position:fixed;inset:0;z-index:55;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;
@@ -210,7 +210,7 @@ button{font-family:inherit;color:inherit}
   background:var(--felt2);color:#ffe9a8;font:700 15px var(--serif);box-shadow:0 0 0 2px var(--gold)}
 .lvl{display:flex;align-items:flex-start;gap:10px;margin:9px 0}
 .lvl .dot{flex:none;margin-top:3px;min-width:84px;text-align:center;padding:4px 0;border-radius:999px;color:#fff;font:700 calc(13px*var(--ts)) var(--sans)}
-.lvl .dot.f{background:#2e9b5f}.lvl .dot.m{background:#d08a14}.lvl .dot.d{background:#b3342c}
+.lvl .dot.f{background:#2e9b5f}.lvl .dot.m{background:#d08a14}.lvl .dot.d{background:#b3342c}.lvl .dot.c{background:#5b3a9e}
 .lvl span{flex:1;font-size:calc(14.5px*var(--ts));line-height:1.4}
 .feat{list-style:none;padding:0!important;margin:6px 0 0!important}
 .feat li{padding:5px 0 5px 24px;position:relative}
@@ -365,7 +365,7 @@ table.st td:first-child,table.st th:first-child{text-align:left}
     <h1>Briscola</h1>
     <p class="lead">Sfida l’avversario al classico gioco di carte.</p>
     <div class="seg" id="lvSeg">
-      <button data-l="facile">Facile</button><button data-l="medio">Medio</button><button data-l="difficile">Difficile</button>
+      <button data-l="facile">Facile</button><button data-l="medio">Medio</button><button data-l="difficile">Difficile</button><button data-l="campione">Campione</button>
     </div>
     <p id="lvDesc"></p>
     <section id="progressPanel" aria-label="Profilo giocatore">
@@ -403,6 +403,9 @@ table.st td:first-child,table.st th:first-child{text-align:left}
 <script>
 'use strict';
 /*ENGINE_START*/
+/* Motore IA genovese v18: euristiche protette + PIMC nel livello Difficile. */
+// Semi delle carte genovesi: Picche, Cuori, Quadri e Fiori.
+// L'ordine interno resta quello degli ID originali delle carte e delle immagini.
 const SUIT_NAMES=['Cuori','Quadri','Fiori','Picche'];
 const SUIT_CH=['♥','♦','♣','♠'];
 const SUIT_COL=['#c8202b','#c8202b','#1c1c22','#1c1c22'];
@@ -447,7 +450,7 @@ function heurPick(hand,t,T){
   // Se la presa vale poco, non usare una carta forte solo per vincere.
   // Quando invece la presa contiene punti, spendi la carta vincente meno preziosa.
   const swing=2*(tablePts+ptsOf(bestWin)+ptsOf(bestLose));
-  const extra=keepPower(bestWin)-keepPower(bestLose);
+  const extra=keepPower(bestWin,T)-keepPower(bestLose,T);
   if(swing>=extra+3)return bestWin;
   return bestLose;
 }
@@ -490,13 +493,13 @@ function buildView(g,side){
   return{
     hand:g.hands[side].slice(),tbl:g.tbl[opp],T:g.T,B:g.B,
     bInDeck:g.deck.length>0,
-    oppKnown:(S.openCards&&!g.league)?g.hands[opp].slice():((g.bOwner===opp&&g.hands[opp].includes(g.B))?[g.B]:[]),
+    oppKnown:(g.bOwner===opp&&g.hands[opp].includes(g.B))?[g.B]:[],
     played:g.played.slice(),myP:g.pts[side],opP:g.pts[opp],
     oppSize:g.hands[opp].length,iLead:g.tbl[opp]===null
   };
 }
 /* Livello difficile: determinizzazione (campiona le carte nascoste) + simulazioni */
-function pimc(v,worlds){
+function pimc(v,worlds,deadline){
   const cands=v.hand;
   if(cands.length===1)return cands[0];
   const used=new Set(v.hand);v.played.forEach(c=>used.add(c));
@@ -538,6 +541,7 @@ function pimc(v,worlds){
   }
   const sc=new Float64Array(cands.length);
   for(let w=0;w<worlds;w++){
+    if(deadline&&w>=80&&performance.now()>deadline)break;
     const pool=shuffle(U.slice());
     const oh=v.oppKnown.concat(pool.slice(0,need)),rest=pool.slice(need);
     const deck=v.bInDeck?[v.B].concat(rest):rest;
@@ -565,13 +569,15 @@ function pimc(v,worlds){
 const $=id=>document.getElementById(id);
 const LS={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
   set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
-const LEVELS={facile:'Facile',medio:'Medio',difficile:'Difficile'};
+const LEVELS={facile:'Facile',medio:'Medio',difficile:'Difficile',campione:'Campione'};
 const LV_DESC={
   facile:'L’avversario gioca spesso a caso: ideale per imparare.',
   medio:'Sceglie con criterio: prende le mani con punti e risparmia le briscole.',
-  difficile:'Conta le carte uscite e simula più scenari per scegliere le mosse migliori.'};
+  difficile:'Conta le carte uscite e simula molte mani possibili per scegliere le mosse migliori.',
+  campione:'Il più forte: simula moltissime mani, ragiona anche quando esce per primo e gioca il finale in modo perfetto.'};
 let S=Object.assign({level:'medio',sound:true,vol:0.7,spd:2,back:'back_default',vibe:true,themeMode:'auto',grad:'feltro',ts:1,reduce:false},LS.get('briscola2_settings',{}));
 let STATS=LS.get('briscola2_stats',{facile:{w:0,l:0,d:0},medio:{w:0,l:0,d:0},difficile:{w:0,l:0,d:0}});
+if(!STATS.campione)STATS.campione={w:0,l:0,d:0};
 const saveS=()=>LS.set('briscola2_settings',S);
 const saveStats=()=>LS.set('briscola2_stats',STATS);
 const CAREER_KEY='briscola2_career_v1';
@@ -629,8 +635,8 @@ async function levelCheck(){
  await askDialog({icon:'⭐',title:'Livello '+lv+' raggiunto!',message:(t!==oldTitle?'Nuovo titolo: '+t+'. ':'Il tuo titolo: '+t+'. ')+'Bonus di '+bonus+' monete.',ok:'Fantastico!',single:true});
 }
 function careerAward(result,level,score){
- const coins=result==='w'?({facile:100,medio:150,difficile:200}[level]||100):0;
- const xp=result==='w'?({facile:25,medio:40,difficile:55}[level]||25):(result==='d'?10:5);
+ const coins=result==='w'?({facile:100,medio:150,difficile:200,campione:260}[level]||100):0;
+ const xp=result==='w'?({facile:25,medio:40,difficile:55,campione:70}[level]||25):(result==='d'?10:5);
  CAREER.xp+=xp;
  CAREER.games=(CAREER.games||0)+1;CAREER.points=(CAREER.points||0)+(score||0);CAREER.bestScore=Math.max(CAREER.bestScore||0,score||0);
  if(result==='w'){CAREER.coins+=coins;CAREER.wins++;CAREER.streak++;CAREER.bestStreak=Math.max(CAREER.bestStreak,CAREER.streak)}
@@ -697,7 +703,7 @@ const LEAGUE=[
  {name:'Il Maestro Genovese',icon:'🏆',level:'difficile',desc:'Il campione: serve una partita quasi perfetta.',reward:800}
 ];
 /* avversari delle partite normali: uno per livello (sono le prime tappe di ogni fascia del campionato) */
-const OPP_BY_LEVEL={facile:{name:'Nonno Gino',icon:'👴'},medio:{name:'Il Barista',icon:'🍷'},difficile:{name:'La Contessa',icon:'👑'}};
+const OPP_BY_LEVEL={facile:{name:'Nonno Gino',icon:'👴'},medio:{name:'Il Barista',icon:'🍷'},difficile:{name:'La Contessa',icon:'👑'},campione:{name:'Il Campione',icon:'🏆'}};
 const LEAGUE_WORLDS=[0,0,0,0,0,240,320,450];
 function leagueCleared(){return CAREER.league.cleared||0}
 function leagueResult(won){
@@ -772,7 +778,7 @@ function careerSheet(k){
    return `<div class="careerCard"><div class="lgRow ${st}"><div class="lgNum">${i<cl?'✓':i+1}</div><div style="flex:1;min-width:0"><h4>${o.name}</h4><p>${o.desc}</p><span class="careerTag">${LEVELS[o.level]} · ${i<cl?'VINTA':o.reward+' monete'}</span></div>${act}</div></div>`}).join('')}${cl>=LEAGUE.length?'<div class="careerCard"><h4>🏆 Sei il campione!</h4><p>Hai battuto tutti gli avversari. Puoi rigiocare qualsiasi tappa, ma i premi si ricevono una volta sola.</p></div>':''}`;
  },bind:()=>{document.querySelectorAll('[data-lg]').forEach(b=>b.onclick=()=>leagueLaunch(+b.dataset.lg))}};
  if(k==='stats')return {title:'Statistiche',html:()=>{
-  const lv=['facile','medio','difficile'];let w=0,l=0,d=0;
+  const lv=['facile','medio','difficile','campione'];let w=0,l=0,d=0;
   lv.forEach(x=>{const s=STATS[x]||{};w+=s.w||0;l+=s.l||0;d+=s.d||0});
   const tot=w+l+d,pct=tot?Math.round(w*100/tot):0,avg=CAREER.games?Math.round(CAREER.points/CAREER.games):'–';
   return `<div class="statGrid">${[[tot,'Partite'],[w,'Vittorie'],[pct+'%','Vinte'],[CAREER.bestStreak||0,'Serie migliore'],[avg,'Punti medi'],[CAREER.bestScore||'–','Record punti']].map(x=>`<div class="statBox"><b>${x[0]}</b><small>${x[1]}</small></div>`).join('')}</div><h4 class="shopH">Per livello</h4>${lv.map(x=>{const s=STATS[x]||{w:0,l:0,d:0},t=s.w+s.l+s.d,p=t?Math.round(s.w*100/t):0;return `<div class="lvStat"><div class="top"><span>${LEVELS[x]}</span><span>${p}% · ${s.w} V · ${s.l} S · ${s.d} P</span></div><div class="mBar"><i style="width:${p}%"></i></div></div>`}).join('')}<p class="sub">Punti medi e record contano dalle partite giocate dalla versione 4.0 in poi. V = vittorie, S = sconfitte, P = pareggi.</p>`;
@@ -1004,8 +1010,8 @@ function renderDeck(){
 function renderOpp(){
   const el=$('oppName');if(!el)return;
   if(!G){el.textContent='';el.removeAttribute('aria-label');return}
-  const L=G.league,o=L?LEAGUE[L.stage]:OPP_BY_LEVEL[G.level],n={facile:1,medio:2,difficile:3}[G.level]||1;
-  el.innerHTML='<span class="av">'+o.icon+'</span><span class="nm">'+o.name+'</span>'+(L?'<span class="lv">'+(L.stage+1)+'/'+LEAGUE.length+'</span>':'')+'<span class="st">'+'★'.repeat(n)+'<i>'+'★'.repeat(3-n)+'</i></span>';
+  const L=G.league,o=L?LEAGUE[L.stage]:OPP_BY_LEVEL[G.level],n={facile:1,medio:2,difficile:3,campione:4}[G.level]||1;
+  el.innerHTML='<span class="av">'+o.icon+'</span><span class="nm">'+o.name+'</span>'+(L?'<span class="lv">'+(L.stage+1)+'/'+LEAGUE.length+'</span>':'')+'<span class="st">'+'★'.repeat(n)+'<i>'+'★'.repeat(Math.max(0,3-n))+'</i></span>';
   el.setAttribute('aria-label','Avversario: '+o.name+', livello '+LEVELS[G.level]+(L?', tappa '+(L.stage+1)+' di '+LEAGUE.length:''));
 }
 function renderTrump(){
@@ -1161,31 +1167,29 @@ function v8ChooseResponse(hand,t,T){
   const sameSuitWins=wins.filter(c=>suitOf(c)===suitOf(t));
   const tablePoints=ptsOf(t);
 
+  // Un carico che resta in mano non è in pericolo: non va tagliata una
+  // carta avversaria solo per "salvare" un Asso/3 che non è sul tavolo.
+  // I carichi si proteggono evitando di giocarli quando non serve.
+
   // 1) Se posso prendere sul seme giocato, preferisco la carta che incassa
   // più punti: per esempio il 3 (10) prima del Re (4), senza tagliare.
   if(suitOf(t)!==T && sameSuitWins.length){
     return maxBy(sameSuitWins,c=>ptsOf(c)*100+rankOf(c));
   }
 
-  // 2) Contro una briscola avversaria: non regalare un proprio Asso/3
-  // non di briscola se posso batterla con una briscola. Uso la briscola
-  // vincente meno costosa, privilegiando le figure rispetto ai carichi.
-  if(suitOf(t)===T){
-    const ownNonTrumpLoads=loses.filter(c=>suitOf(c)!==T&&rankOf(c)>=8);
-    if(ownNonTrumpLoads.length && wins.length){
-      const cheapTrumpWins=wins.filter(c=>suitOf(c)===T && rankOf(c)<8);
-      if(cheapTrumpWins.length)return minBy(cheapTrumpWins,c=>rankOf(c));
-      // Se l'unica briscola che salva il carico è Asso/3, la si può spendere:
-      // meglio salvare 10/11 punti che perdere il carico non di briscola.
-      const trumpWins=wins.filter(c=>suitOf(c)===T);
-      if(trumpWins.length)return minBy(trumpWins,c=>rankOf(c));
-    }
-  }
+  // Contro una briscola avversaria, se non c'è una presa utile si scarta
+  // la carta meno costosa: i carichi rimasti in mano sono già al sicuro.
 
   // 3) Una presa vuota non giustifica mai l'Asso/3 di briscola.
-  // Se esiste uno scarto senza punti, lo uso. Se devo proteggere un carico
-  // non di briscola contro una carta bassa, valgono le eccezioni sopra.
+  // Se esiste uno scarto senza punti, lo uso.
   if(tablePoints===0){
+    // v5.1: se l'unico scarto possibile e' un carico (Asso/3), non regalarlo:
+    // meglio prendere la mano con la carta vincente meno preziosa (di solito una briscola bassa).
+    if(bestLose!==null&&rankOf(bestLose)>=8&&wins.length){
+      const cheapWins=wins.filter(c=>!v5IsTrumpLoad(c,T));
+      if(cheapWins.length)return minBy(cheapWins,c=>keepPower(c,T));
+      return minBy(wins,c=>rankOf(c));
+    }
     if(bestLose!==null)return bestLose;
     const safeWins=wins.filter(c=>!v5IsTrumpLoad(c,T));
     if(safeWins.length)return minBy(safeWins,c=>keepPower(c,T));
@@ -1201,7 +1205,10 @@ function v8ChooseResponse(hand,t,T){
     const nonTrumpWins=wins.filter(c=>suitOf(c)!==T);
     if(nonTrumpWins.length)return v5BestWinner(nonTrumpWins,t,T);
     const trumpLoads=wins.filter(c=>suitOf(c)===T && rankOf(c)>=8);
-    if(trumpLoads.length && tablePoints>=10)return minBy(trumpLoads,c=>rankOf(c));
+    // v5.2: se l'unico scarto sarebbe un carico, meglio prendere col carico di briscola
+    // (la carta spesa torna a lui insieme a quella avversaria).
+    const loseIsLoad=bestLose!==null&&rankOf(bestLose)>=8;
+    if(trumpLoads.length && (tablePoints>=10||loseIsLoad))return minBy(trumpLoads,c=>rankOf(c));
     if(bestLose!==null)return bestLose;
     return minBy(trumpLoads.length?trumpLoads:wins,c=>keepPower(c,T));
   }
@@ -1229,8 +1236,32 @@ function v15OpeningByLoadSuit(hand,T){
   if(outSuitCards.length)return minBy(outSuitCards,c=>discardCost(c,T));
   return null;
 }
+function v16ThreeLoadLead(hand,T){
+  // Caso speciale richiesto: tre carichi in mano, uno di briscola e due no.
+  // Se il carico di briscola è l'Asso, uscire con quello per tentare di
+  // incassare in seguito i due carichi degli altri semi.
+  // Se è il 3, uscire con lui solo quando l'Asso di briscola è già uscito.
+  const loads=hand.filter(c=>rankOf(c)>=8);
+  if(loads.length!==3)return null;
+  const trumpLoads=loads.filter(c=>suitOf(c)===T);
+  const otherLoads=loads.filter(c=>suitOf(c)!==T);
+  if(trumpLoads.length!==1||otherLoads.length!==2)return null;
+  const trumpLoad=trumpLoads[0];
+  if(rankOf(trumpLoad)===9)return trumpLoad; // Asso di briscola
+  if(rankOf(trumpLoad)===8){
+    const trumpAceAlreadyPlayed=(G.played||[]).some(c=>suitOf(c)===T&&rankOf(c)===9);
+    if(trumpAceAlreadyPlayed)return trumpLoad; // 3 sicuro: Asso già uscito
+  }
+  // Se il 3 di briscola è ancora esposto all'Asso avversario, non uscire
+  // con lui: lascia che la normale strategia scelga una carta non-carico.
+  return null;
+}
 function v8OpeningPick(hand,T){
   if(!hand.length)return null;
+  // Regola speciale dei tre carichi: Asso di briscola per primo; 3 solo
+  // se l'Asso di briscola risulta già tra le carte uscite.
+  const threeLoadLead=v16ThreeLoadLead(hand,T);
+  if(threeLoadLead!==null)return threeLoadLead;
   // Prima applica la nuova strategia di uscita legata ai semi dei carichi.
   const loadSuitLead=v15OpeningByLoadSuit(hand,T);
   if(loadSuitLead!==null)return loadSuitLead;
@@ -1267,10 +1298,71 @@ function expertPick(hand,t,T){
 function cpuChoose(){
   const hand=G.hands[1];if(hand.length===1)return hand[0];
   const t=G.tbl[0],T=G.T;
-  if(t===null||t===undefined)return expertPick(hand,null,T);
-  // Le regole di risposta sono vincolanti anche a Difficile: non deve
-  // trasformare uno scarto gratuito in un taglio inutile.
-  return v8ChooseResponse(hand,t,T);
+  const champ=G.level==='campione',strong=champ||G.level==='difficile';
+  // Finale (Difficile e Campione): con il mazzo finito (o solo la briscola scoperta)
+  // le carte dell'avversario sono note per deduzione: soluzione esatta.
+  if(strong&&G.deck.length<=1){
+    try{
+      const ex=pimc(buildView(G,1),1);
+      if(ex!==null&&ex!==undefined&&hand.includes(ex))return ex;
+    }catch(err){console.warn('Finale esatto non disponibile:',err);}
+  }
+  const worlds=champ?(G.deck.length>12?800:(G.deck.length>4?1400:2000)):(G.deck.length>12?420:(G.deck.length>4?760:1100));
+  const dl=champ?performance.now()+1600:0;
+  // Apertura: Campione ragiona con la simulazione, gli altri livelli con le regole genovesi.
+  if(t===null||t===undefined){
+    if(champ){
+      try{
+        const sim=pimc(buildView(G,1),worlds,dl);
+        if(sim!==null&&sim!==undefined&&hand.includes(sim)){
+          // v5.3: non uscire con un carico se esiste un'altra carta (regola della guida).
+          if(rankOf(sim)>=8&&hand.some(c=>rankOf(c)<8))return expertPick(hand,null,T);
+          return sim;
+        }
+      }catch(err){console.warn('PIMC apertura non disponibile:',err);}
+    }
+    return expertPick(hand,null,T);
+  }
+  const rulePick=v8ChooseResponse(hand,t,T);
+  if(!strong)return rulePick;
+  const canWin=hand.some(c=>followerWins(t,c,T));
+  if(champ){
+    try{
+      const sim=pimc(buildView(G,1),worlds,dl);
+      if(sim===null||sim===undefined||!hand.includes(sim))return rulePick;
+      // Mai regalare un carico (Asso/3) se si può prendere la mano.
+      if(rankOf(sim)>=8&&!followerWins(t,sim,T)&&canWin)return rulePick;
+      // v5.3: se perde la mano, non regalare più punti del necessario (Donna prima del Re);
+      // e non bruciare una briscola per una presa da 0 punti.
+      const rpWins=followerWins(t,rulePick,T);
+      if(!rpWins&&!followerWins(t,sim,T)&&ptsOf(sim)>ptsOf(rulePick))return rulePick;
+      if(!rpWins&&ptsOf(t)===0&&suitOf(sim)===T&&followerWins(t,sim,T))return rulePick;
+      if(suitOf(sim)===T&&followerWins(t,sim,T)){
+        const wt=hand.filter(c=>suitOf(c)===T&&followerWins(t,c,T));
+        return minBy(wt,c=>rankOf(c));
+      }
+      return sim;
+    }catch(err){console.warn('PIMC non disponibile, uso strategia esperta:',err);return rulePick;}
+  }
+  // Difficile: decisioni obbligate o quasi-obbligate restano alle regole.
+  const tablePoints=ptsOf(t);
+  if(tablePoints===0||tablePoints>=10)return rulePick;
+  const sameSuitWins=hand.filter(c=>suitOf(c)===suitOf(t)&&followerWins(t,c,T));
+  if(sameSuitWins.length)return rulePick;
+  try{
+    const simulated=pimc(buildView(G,1),worlds);
+    if(simulated===null||simulated===undefined||!hand.includes(simulated))return rulePick;
+    if(rankOf(simulated)>=8&&!followerWins(t,simulated,T)&&canWin)return rulePick;
+    if(v5IsTrumpLoad(simulated,T))return rulePick;
+    if(suitOf(simulated)===T){
+      const winningTrumps=hand.filter(c=>suitOf(c)===T&&followerWins(t,c,T));
+      if(winningTrumps.length)return minBy(winningTrumps,c=>rankOf(c));
+    }
+    return simulated;
+  }catch(err){
+    console.warn('PIMC non disponibile, uso strategia esperta:',err);
+    return rulePick;
+  }
 }
 async function cpuPlay(){
   setTurn(1);say(G.lead===1?'Tocca all’avversario…':'L’avversario risponde…');
@@ -1438,7 +1530,8 @@ const SHEETS={
     ${sec('tap','Comandi','<ul class="feat"><li>Tocca una carta della tua mano per giocarla: quando tocca a te le carte si alzano.</li><li>I punti tuoi e dell’avversario si aggiornano a ogni mano.</li><li>In Impostazioni puoi attivare <b>Carte scoperte</b> per vedere la mano dell’avversario nelle partite amichevoli.</li><li>Dal menu ⋮ puoi cambiare tema, sfondo e dimensione del testo.</li></ul>')}
     ${sec('levels','Livelli',`<div class="lvl"><div class="dot f">Facile</div><span>${LV_DESC.facile}</span></div>
       <div class="lvl"><div class="dot m">Medio</div><span>${LV_DESC.medio}</span></div>
-      <div class="lvl"><div class="dot d">Difficile</div><span>${LV_DESC.difficile}</span></div><p class="sub">Nelle partite normali sfidi Nonno Gino (Facile), Il Barista (Medio) o La Contessa (Difficile). Le stelle sulla targhetta in alto mostrano il livello.</p>`)}
+      <div class="lvl"><div class="dot d">Difficile</div><span>${LV_DESC.difficile}</span></div>
+      <div class="lvl"><div class="dot c">Campione</div><span>${LV_DESC.campione}</span></div><p class="sub">Nelle partite normali sfidi Nonno Gino (Facile), Il Barista (Medio), La Contessa (Difficile) o Il Campione (Campione). Le stelle sulla targhetta in alto mostrano il livello.</p>`)}
     ${sec('trophy','Profilo, missioni e campionato',`<ul class="feat"><li>Ogni partita dà XP e monete: salendo di livello cambi titolo, da Novizio fino a Gran Maestro, e ricevi un bonus.</li><li>Ogni giorno ci sono tre missioni nuove e un premio giornaliero da riscattare.</li><li>Nel Campionato batti otto avversari in sequenza, sempre più forti.</li><li>Con le monete compri fondali del tavolo e dorsi delle carte nel Negozio.</li><li>Nelle Statistiche trovi vittorie, serie migliore e punti medi.</li></ul>`)}`},
   impostazioni:{title:'Impostazioni',html:()=>`
     <h4>Livello per le nuove partite</h4>
@@ -1475,13 +1568,13 @@ const SHEETS={
     $('setTs').querySelectorAll('button').forEach(b=>b.onclick=()=>{S.ts=+b.dataset.t;saveS();applyTheme();$('setTs').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b))});
     $('setReduce').onclick=()=>{S.reduce=!S.reduce;saveS();applyTheme();$('setReduce').classList.toggle('on',S.reduce);$('setReduce').setAttribute('aria-checked',S.reduce)};
     $('setSpd').querySelectorAll('button').forEach(b=>b.onclick=()=>{S.spd=+b.dataset.n;saveS();applyDur();$('setSpd').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b))});
-    $('resetStats').onclick=async()=>{const ok=await askDialog({icon:'⚠️',title:'Azzerare le statistiche?',message:'Vittorie, sconfitte e pareggi di tutti i livelli tornano a zero. L’operazione non si può annullare.',ok:'Azzera',cancel:'Annulla',danger:true});if(ok){STATS={facile:{w:0,l:0,d:0},medio:{w:0,l:0,d:0},difficile:{w:0,l:0,d:0}};saveStats();$('statBox').innerHTML=statsTable()}};
+    $('resetStats').onclick=async()=>{const ok=await askDialog({icon:'⚠️',title:'Azzerare le statistiche?',message:'Vittorie, sconfitte e pareggi di tutti i livelli tornano a zero. L’operazione non si può annullare.',ok:'Azzera',cancel:'Annulla',danger:true});if(ok){STATS={facile:{w:0,l:0,d:0},medio:{w:0,l:0,d:0},difficile:{w:0,l:0,d:0},campione:{w:0,l:0,d:0}};saveStats();$('statBox').innerHTML=statsTable()}};
    }},
   info:{title:'Info e crediti',html:()=>{
     const tot=Object.values(STATS).reduce((n,x)=>n+x.w+x.l+x.d,0),won=Object.values(STATS).reduce((n,x)=>n+x.w,0);
     return `<div class="hero"><div class="mf">${[[9,0,-12],[39,48,0],[17,96,12]].map(c=>`<div style="left:${c[1]}px;transform:rotate(${c[2]}deg)">${faceSVG(c[0])}</div>`).join('')}</div>
-      <h2>Briscola by Miki</h2><p>La briscola contro il computer</p><span class="pill">Versione <span id="app-version">5.0</span></span></div>
-    ${sec('cards','Cosa include','<ul class="feat"><li>Partita singola a due giocatori contro il computer</li><li>Tre livelli: Facile, Medio e Difficile</li><li>Punteggi in tempo reale e suoni delle carte</li><li>Missioni giornaliere, campionato e statistiche</li><li>Profilo con livelli, titoli, monete e trofei</li><li>Negozio di fondali e dorsi</li><li>Temi, sfondi del tavolo e testo ingrandibile</li></ul>')}
+      <h2>Briscola by Miki</h2><p>La briscola contro il computer</p><span class="pill">Versione <span id="app-version">5.3</span></span></div>
+    ${sec('cards','Cosa include','<ul class="feat"><li>Partita singola a due giocatori contro il computer</li><li>Quattro livelli: Facile, Medio, Difficile e Campione</li><li>Punteggi in tempo reale e suoni delle carte</li><li>Missioni giornaliere, campionato e statistiche</li><li>Profilo con livelli, titoli, monete e trofei</li><li>Negozio di fondali e dorsi</li><li>Temi, sfondi del tavolo e testo ingrandibile</li></ul>')}
     ${sec('levels','Le tue partite',`<p>Partite giocate: <b>${tot}</b> · vinte: <b>${won}</b>.</p>`)}
     ${sec('info','Crediti','<p>Ideata e voluta da <b>Miki</b>, sviluppata con il supporto di <b>Claude (Anthropic)</b> e <b>ChatGPT (OpenAI)</b>.</p><p>Carte, tavolo e suoni sono disegnati e generati nel codice: nessuna immagine o file audio esterno.</p>')}
     ${sec('shield','I tuoi dati','<p>Impostazioni, statistiche e partita in corso restano solo su questo dispositivo.</p>')}`}}
