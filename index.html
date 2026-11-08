@@ -1317,6 +1317,8 @@ function cpuChoose(){
         if(sim!==null&&sim!==undefined&&hand.includes(sim)){
           // v5.3: non uscire con un carico se esiste un'altra carta (regola della guida).
           if(rankOf(sim)>=8&&hand.some(c=>rankOf(c)<8))return expertPick(hand,null,T);
+          // v5.5: nell'apertura (mazzo > 6) non si esce con una briscola se c'è una carta non di briscola senza carico.
+          if(G.deck.length>6&&suitOf(sim)===T&&hand.some(c=>suitOf(c)!==T&&rankOf(c)<8))return expertPick(hand,null,T);
           return sim;
         }
       }catch(err){console.warn('PIMC apertura non disponibile:',err);}
@@ -1575,7 +1577,7 @@ const SHEETS={
   info:{title:'Info e crediti',html:()=>{
     const tot=Object.values(STATS).reduce((n,x)=>n+x.w+x.l+x.d,0),won=Object.values(STATS).reduce((n,x)=>n+x.w,0);
     return `<div class="hero"><div class="mf">${[[9,0,-12],[39,48,0],[17,96,12]].map(c=>`<div style="left:${c[1]}px;transform:rotate(${c[2]}deg)">${faceSVG(c[0])}</div>`).join('')}</div>
-      <h2>Briscola by Miki</h2><p>La briscola contro il computer</p><span class="pill">Versione <span id="app-version">5.4</span></span></div>
+      <h2>Briscola by Miki</h2><p>La briscola contro il computer</p><span class="pill">Versione <span id="app-version">5.5</span></span></div>
     ${sec('cards','Cosa include','<ul class="feat"><li>Partita singola a due giocatori contro il computer</li><li>Quattro livelli: Facile, Medio, Difficile e Campione</li><li>Punteggi in tempo reale e suoni delle carte</li><li>Missioni giornaliere, campionato e statistiche</li><li>Profilo con livelli, titoli, monete e trofei</li><li>Negozio di fondali e dorsi</li><li>Temi, sfondi del tavolo e testo ingrandibile</li></ul>')}
     ${sec('levels','Le tue partite',`<p>Partite giocate: <b>${tot}</b> · vinte: <b>${won}</b>.</p>`)}
     ${sec('info','Crediti','<p>Ideata e voluta da <b>Miki</b>, sviluppata con il supporto di <b>Claude (Anthropic)</b> e <b>ChatGPT (OpenAI)</b>.</p><p>Carte, tavolo e suoni sono disegnati e generati nel codice: nessuna immagine o file audio esterno.</p>')}
