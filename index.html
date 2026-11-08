@@ -1331,6 +1331,8 @@ function cpuChoose(){
   if(champ){
     // v5.4: se si può prendere sul seme giocato (es. Asso sul suo seme), si prende sempre.
     if(hand.some(c=>suitOf(c)===suitOf(t)&&followerWins(t,c,T)))return rulePick;
+    // v5.6: se sul tavolo c'è un carico (Asso/3) e si può prenderlo, si prende (col meno prezioso, anche briscola).
+    if(canWin&&ptsOf(t)>=10)return rulePick;
     try{
       const sim=pimc(buildView(G,1),worlds,dl);
       if(sim===null||sim===undefined||!hand.includes(sim))return rulePick;
@@ -1577,7 +1579,7 @@ const SHEETS={
   info:{title:'Info e crediti',html:()=>{
     const tot=Object.values(STATS).reduce((n,x)=>n+x.w+x.l+x.d,0),won=Object.values(STATS).reduce((n,x)=>n+x.w,0);
     return `<div class="hero"><div class="mf">${[[9,0,-12],[39,48,0],[17,96,12]].map(c=>`<div style="left:${c[1]}px;transform:rotate(${c[2]}deg)">${faceSVG(c[0])}</div>`).join('')}</div>
-      <h2>Briscola by Miki</h2><p>La briscola contro il computer</p><span class="pill">Versione <span id="app-version">5.5</span></span></div>
+      <h2>Briscola by Miki</h2><p>La briscola contro il computer</p><span class="pill">Versione <span id="app-version">5.6</span></span></div>
     ${sec('cards','Cosa include','<ul class="feat"><li>Partita singola a due giocatori contro il computer</li><li>Quattro livelli: Facile, Medio, Difficile e Campione</li><li>Punteggi in tempo reale e suoni delle carte</li><li>Missioni giornaliere, campionato e statistiche</li><li>Profilo con livelli, titoli, monete e trofei</li><li>Negozio di fondali e dorsi</li><li>Temi, sfondi del tavolo e testo ingrandibile</li></ul>')}
     ${sec('levels','Le tue partite',`<p>Partite giocate: <b>${tot}</b> · vinte: <b>${won}</b>.</p>`)}
     ${sec('info','Crediti','<p>Ideata e voluta da <b>Miki</b>, sviluppata con il supporto di <b>Claude (Anthropic)</b> e <b>ChatGPT (OpenAI)</b>.</p><p>Carte, tavolo e suoni sono disegnati e generati nel codice: nessuna immagine o file audio esterno.</p>')}
