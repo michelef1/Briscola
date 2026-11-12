@@ -31,7 +31,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.5;mi
 button{font-family:inherit;color:inherit}
 .hidden{display:none!important}
 
-#app{position:relative;z-index:1;max-width:560px;height:100vh;height:100dvh;margin:0 auto;display:flex;flex-direction:column;
+#app{position:relative;z-index:1;max-width:560px;height:100%;margin:0 auto;display:flex;flex-direction:column;
   padding-top:env(safe-area-inset-top)}
 #top{height:64px;flex:none;display:flex;align-items:center;gap:6px;padding:0 10px 0 14px;position:relative;z-index:30}
 .logo{flex:1;font:700 25px/1 var(--serif);color:#fdf3d2;letter-spacing:.02em;text-shadow:0 2px 0 rgba(0,0,0,.3)}
@@ -1694,7 +1694,7 @@ const SHEETS={
   info:{title:'Info e crediti',html:()=>{
     const tot=Object.values(STATS).reduce((n,x)=>n+x.w+x.l+x.d,0),won=Object.values(STATS).reduce((n,x)=>n+x.w,0);
     return `<div class="hero"><div class="mf">${[[9,0,-12],[39,48,0],[17,96,12]].map(c=>`<div style="left:${c[1]}px;transform:rotate(${c[2]}deg)">${faceSVG(c[0])}</div>`).join('')}</div>
-      <h2>Briscola by Miki</h2><p>La briscola contro il computer</p><span class="pill">Versione <span id="app-version">6.1</span></span></div>
+      <h2>Briscola by Miki</h2><p>La briscola contro il computer</p><span class="pill">Versione <span id="app-version">6.2</span></span></div>
     ${sec('cards','Cosa include','<ul class="feat"><li>Partita singola a due giocatori contro il computer</li><li>Quattro livelli: Facile, Medio, Difficile e Campione</li><li>Punteggi in tempo reale e suoni delle carte</li><li>Missioni giornaliere, campionato e statistiche</li><li>Profilo con livelli, titoli, monete e trofei</li><li>Negozio di fondali e dorsi</li><li>Temi, sfondi del tavolo e testo ingrandibile</li></ul>')}
     ${sec('levels','Le tue partite',`<p>Partite giocate: <b>${tot}</b> · vinte: <b>${won}</b>.</p>`)}
     ${sec('info','Crediti','<p>Ideata e voluta da <b>Miki</b>, sviluppata con il supporto di <b>Claude (Anthropic)</b> e <b>ChatGPT (OpenAI)</b>.</p><p>Carte, tavolo e suoni sono disegnati e generati nel codice: nessuna immagine o file audio esterno.</p>')}
@@ -1778,10 +1778,13 @@ $('endAgain').onclick=()=>{
 $('endMenu').onclick=()=>{showStart()};
 document.addEventListener('pointerdown',()=>auInit(),{once:true});
 
-window.addEventListener('resize',()=>{
+function relayout(){
   computeLayout();
   if(G){const b=$('board');b.classList.add('nt');renderDeck();render();void b.offsetWidth;b.classList.remove('nt')}
-});
+}
+window.addEventListener('resize',relayout);
+/* v6.2: alcuni browser mobile non inviano 'resize' quando compare/sparisce la barra: si osserva direttamente il tavolo */
+if(window.ResizeObserver){let rot=0,lw=0,lh=0;new ResizeObserver(()=>{const b=$('board');if(b.clientWidth===lw&&b.clientHeight===lh)return;lw=b.clientWidth;lh=b.clientHeight;clearTimeout(rot);rot=setTimeout(relayout,60)}).observe($('board'))}
 
 /* ================== AVVIO ================== */
 if(gradLocked(S.grad)){S.grad='feltro';saveS()}
